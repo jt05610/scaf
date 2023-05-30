@@ -1,0 +1,7 @@
+file_server
+{{- range .APIs}}
+reverse_proxy {{.Path}} 127.0.0.1:{{.Port}}
+{{- end}}
+{{- range .UIs}}
+reverse_proxy {{.Path}} 127.0.0.1:{{.Port}}
+{{- end}}
