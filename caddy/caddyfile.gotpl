@@ -1,6 +1,11 @@
-{{.Addr}}
-
-file_server
-{{- range .Servers}}
-reverse_proxy {{.Path}} {{.Addr}}:{{.Port}}
+{{.Addr}} {
+{{- range .Frontends}}
+    reverse_proxy {{if .Path}}{{.Path}}/*{{else}}*{{end}} {{.Addr}}:{{.Port}}
 {{- end}}
+}
+
+api.{{.Addr}} {
+{{- range .APIs}}
+    reverse_proxy {{if .Path}}{{.Path}}/*{{else}}*{{end}} {{.Addr}}:{{.Port}}
+{{- end}}
+}
