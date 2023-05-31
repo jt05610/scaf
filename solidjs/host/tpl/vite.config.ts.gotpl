@@ -1,0 +1,44 @@
+/// <reference types="vitest" />
+/// <reference types="vite/client" />
+
+import {defineConfig} from 'vite';
+import federation from "@originjs/vite-plugin-federation";
+import solidPlugin from 'vite-plugin-solid';
+
+defineConfig({
+    plugins: [
+        solidPlugin(),
+        federation({
+            name: 'appFrame',
+            remotes: {
+{{- range .Remotes}}
+                {{.Name}}: '{{.Name}}@http://{{.Addr}}:{{.Port}}/assets/remoteEntry.js',
+{{- end}},
+            },
+            shared: [
+                "solid-js": {
+                    singleton: true,
+                },
+            ]
+        })
+    ],
+    server: {
+        port: {{.Port}},
+    },
+    test: {
+        environment: 'jsdom',
+        globals: true,
+        transformMode: {web: [/\.[jt]sx?$/]},
+        setupFiles: ['node_modules/@testing-library/jest-dom/extend-expect.js'],
+        // otherwise, solid would be loaded twice:
+        deps: {registerNodeLoader: true},
+        threads: false,
+        isolate: false,
+    },
+    build: {
+        target: 'esnext',
+    },
+    resolve: {
+        conditions: ['development', 'browser'],
+    },
+});

@@ -28,15 +28,18 @@ func (t *Tree) Render(parent string) error {
 func New(name string, blinky bool) *Tree {
 	if blinky {
 		return &Tree{
-			".":                       {name + ".yaml", "Caddyfile"},
-			"api":                     {name + ".graphql"},
-			"modules":                 {},
-			"modules/blinky":          {"blinky.yaml"},
-			"modules/blinky/firmware": {},
-			"modules/blinky/service":  {},
-			"modules/blinky/ui":       {},
-			"external":                {},
+			".":                          {name + ".yaml", "Caddyfile"},
+			"api":                        {name + ".graphql"},
+			"ui":                         {},
+			"modules":                    {},
+			"modules/blinky":             {"blinky.yaml"},
+			"modules/blinky/firmware":    {},
+			"modules/blinky/service":     {},
+			"modules/blinky/service/api": {},
+			"modules/blinky/ui":          {},
+			"external":                   {},
 		}
+
 	} else {
 		return &Tree{
 			".":       {name + ".yaml", "Caddyfile"},
