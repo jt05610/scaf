@@ -26,7 +26,7 @@ and microservices. It's ideal for researchers and developers who want to streaml
 For example, with scaf, you can:
 
 - Describe your robotics modules in YAML files and define API endpoints with GraphQL.
-- Generate firmware automatically based on the provided robot descriptions.
+- Generate firmware automatically based on the provided system descriptions.
 - Create SolidJS microfrontends that can be easily incorporated into a primary UI app frame.
 - Produce microservices for the new modules in your chosen language, with support for Python and Go, and extensibility for other languages.
 - Download and organize your required modules automatically in a local directory, akin to Python's venv or Node's node_modules.
