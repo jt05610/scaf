@@ -5,12 +5,14 @@ Copyright © 2023 Jonathan Taylor jonrtaylor12@gmail.com
 package cmd
 
 import (
+	"github.com/jt0610/scaf/context"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
 var cfgFile string
+var ctx context.Context
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{

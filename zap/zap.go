@@ -9,13 +9,7 @@ import (
 	"time"
 )
 
-type Logger struct {
-	z *zap.Logger
-}
-
-type LogLevel uint8
-
-func newLogger(ctx context.Context, name string, l zapcore.Level) *Logger {
+func newLogger(ctx context.Context, name string, l zapcore.Level) *zap.Logger {
 	z := zap.New(
 		zapcore.NewCore(
 			zapcore.NewJSONEncoder(encoderCfg),
@@ -53,13 +47,10 @@ func newLogger(ctx context.Context, name string, l zapcore.Level) *Logger {
 			panic(err)
 		}
 	}()
-	return &Logger{
-		z: z,
-	}
-
+	return z
 }
 
-func newSampler(ctx context.Context, name string, l zapcore.Level, freq time.Duration, initial, skip int) *Logger {
+func newSampler(ctx context.Context, name string, l zapcore.Level, freq time.Duration, initial, skip int) *zap.Logger {
 	z := zap.New(
 		zapcore.NewSamplerWithOptions(
 			zapcore.NewCore(
@@ -99,28 +90,25 @@ func newSampler(ctx context.Context, name string, l zapcore.Level, freq time.Dur
 			panic(err)
 		}
 	}()
-	return &Logger{
-		z: z,
-	}
-
+	return z
 }
 
-func NewProd(ctx context.Context, name string) *Logger {
+func NewProd(ctx context.Context, name string) *zap.Logger {
 	l := newLogger(ctx, name, zapcore.InfoLevel)
 	return l
 }
 
-func NewDev(ctx context.Context, name string) *Logger {
+func NewDev(ctx context.Context, name string) *zap.Logger {
 	l := newLogger(ctx, name, zapcore.DebugLevel)
 	return l
 }
 
-func NewProdSampling(ctx context.Context, name string, freq time.Duration, initial, skip int) *Logger {
+func NewProdSampling(ctx context.Context, name string, freq time.Duration, initial, skip int) *zap.Logger {
 	l := newSampler(ctx, name, zapcore.InfoLevel, freq, initial, skip)
 	return l
 }
 
-func NewDevSampling(ctx context.Context, name string, freq time.Duration, initial, skip int) *Logger {
+func NewDevSampling(ctx context.Context, name string, freq time.Duration, initial, skip int) *zap.Logger {
 	l := newSampler(ctx, name, zapcore.DebugLevel, freq, initial, skip)
 	return l
 }

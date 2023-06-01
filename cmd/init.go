@@ -5,8 +5,9 @@ Copyright © 2023 Jonathan Taylor jonrtaylor12@gmail.com
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/jt0610/scaf/context"
+	"github.com/jt0610/scaf/wizard"
+	"github.com/jt0610/scaf/zap"
 	"github.com/spf13/cobra"
 )
 
@@ -29,20 +30,15 @@ By default, scaf generates blinky: a robot with the ability to control the color
 frequency of the blinking LED. This can be switched off with the --no-blinky flag.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("init called")
+		ctx = context.NewContext(zap.NewProd(context.Background(), "init"))
+		w := &wizard.Wizard{}
+		err := w.Run(ctx, nil)
+		if err != nil {
+			ctx.Logger.Panic("Error running init: " + err.Error())
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(initCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// initCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// initCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
