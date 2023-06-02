@@ -5,13 +5,16 @@ Copyright © 2023 Jonathan Taylor jonrtaylor12@gmail.com
 package cmd
 
 import (
+	"github.com/jt0610/scaf/actions"
 	"github.com/jt0610/scaf/context"
+	"github.com/jt0610/scaf/zap"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
 var cfgFile string
+var hndl *actions.Handler
 var ctx context.Context
 
 // rootCmd represents the base command when called without any subcommands
@@ -35,6 +38,8 @@ For example, with scaf, you can:
 }
 
 func Execute() {
+	ctx = context.NewContext(zap.NewProd(context.Background(), "init"))
+	hndl = actions.YamlHandler(ctx)
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)

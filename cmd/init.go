@@ -5,10 +5,9 @@ Copyright © 2023 Jonathan Taylor jonrtaylor12@gmail.com
 package cmd
 
 import (
-	"github.com/jt0610/scaf/context"
-	"github.com/jt0610/scaf/wizard"
-	"github.com/jt0610/scaf/zap"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
+	"os"
 )
 
 // initCmd represents the init command
@@ -30,11 +29,19 @@ By default, scaf generates blinky: a system with the ability to control the colo
 frequency of the blinking LED. This can be switched off with the --no-blinky flag.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx = context.NewContext(zap.NewProd(context.Background(), "init"))
-		w := &wizard.Wizard{}
-		err := w.Run(ctx, nil)
+		f, err := os.Create("system.yaml")
 		if err != nil {
-			ctx.Logger.Panic("Error running init: " + err.Error())
+			ctx.Logger.Panic("could not create system.yaml", zap.Error(err))
+		}
+		defer func(f *os.File) {
+			err := f.Close()
+			if err != nil {
+				ctx.Logger.Panic("could not close system.yaml", zap.Error(err))
+			}
+		}(f)
+		err = hndl.CreateSystem(ctx, f)
+		if err != nil {
+			ctx.Logger.Panic("could not create system", zap.Error(err))
 		}
 	},
 }

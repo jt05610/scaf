@@ -10,4 +10,6 @@ const (
 
 type Comm struct {
 	Protocol Protocol
+	Address  string
+	Port     int
 }

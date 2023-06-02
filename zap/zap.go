@@ -36,7 +36,7 @@ func newLogger(ctx context.Context, name string, l zapcore.Level) *zap.Logger {
 					zapcore.NewCore(
 						zapcore.NewConsoleEncoder(ucEncoder),
 						zapcore.Lock(os.Stdout),
-						zapcore.DebugLevel,
+						zap.InfoLevel,
 					),
 				)
 			}))

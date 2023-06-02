@@ -9,14 +9,14 @@ import (
 
 type Handler struct {
 	Ctx           context.Context
-	SystemService service.Service[system.System]
-	ModService    service.Service[system.Module]
+	SystemService service.Service[*system.System]
+	ModService    service.Service[*system.Module]
 }
 
 func YamlHandler(ctx context.Context) *Handler {
 	return &Handler{
 		Ctx:           ctx,
-		SystemService: yaml.NewYAMLService[system.System](),
-		ModService:    yaml.NewYAMLService[system.Module](),
+		SystemService: yaml.NewYAMLService[*system.System](),
+		ModService:    yaml.NewYAMLService[*system.Module](),
 	}
 }
