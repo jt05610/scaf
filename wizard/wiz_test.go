@@ -9,11 +9,6 @@ import (
 
 type Hobby string
 
-const (
-	Coding Hobby = "coding"
-	Lab    Hobby = "labwork"
-)
-
 type Person struct {
 	Name    string `prompt:"What is your name?" default:"John Doe"`
 	Age     int    `prompt:"What is your age?" default:"27"`
