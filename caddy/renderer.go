@@ -97,18 +97,6 @@ type renderer struct {
 	parDir string
 }
 
-func (r *renderer) Load(rdr io.Reader) (*Caddyfile, error) {
-	t, err := codegen.Load("caddyfile.gotpl")
-	if err != nil {
-		return nil, err
-	}
-	f := &Caddyfile{}
-}
-
-func (r *renderer) Suffix() string {
-	return "Caddyfile"
-}
-
 func (r *renderer) Flush(w io.Writer, f *Caddyfile) error {
 	for _, s := range f.Servers {
 		if s.Kind == API {
@@ -125,6 +113,6 @@ func (r *renderer) Flush(w io.Writer, f *Caddyfile) error {
 	return t.Execute(w, f)
 }
 
-func Service(parDir string) service.Service[*Caddyfile] {
+func Renderer(parDir string) service.Renderer[*Caddyfile] {
 	return &renderer{parDir: parDir}
 }

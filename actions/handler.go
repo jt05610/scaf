@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"github.com/jt0610/scaf/caddy"
 	"github.com/jt0610/scaf/context"
 	"github.com/jt0610/scaf/service"
 	"github.com/jt0610/scaf/system"
@@ -14,6 +15,8 @@ type Handler struct {
 	Ctx context.Context
 	// SystemService is a service.Service specialized to work with system.System.
 	SystemService service.Service[*system.System]
+	// CaddyService is a service.Service specialized to work with caddy.Caddyfile.
+	CaddyService service.Service[*caddy.Caddyfile]
 	// ModService is a service.Service specialized to work with system.Module.
 	ModService service.Service[*system.Module]
 }
@@ -24,6 +27,7 @@ func YamlHandler(ctx context.Context) *Handler {
 	return &Handler{
 		Ctx:           ctx,
 		SystemService: yaml.NewYAMLService[*system.System](),
+		CaddyService:  yaml.NewYAMLService[*caddy.Caddyfile](),
 		ModService:    yaml.NewYAMLService[*system.Module](),
 	}
 }

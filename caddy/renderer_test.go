@@ -32,8 +32,8 @@ func TestRenderer_Render(t *testing.T) {
 	})
 
 	buf := new(bytes.Buffer)
-	r := caddy.Service("caddy")
-	err := r.Render(buf, c)
+	r := caddy.Renderer("caddy")
+	err := r.Flush(buf, c)
 	if err != nil {
 		t.Fatal(err)
 	}

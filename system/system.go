@@ -1,7 +1,10 @@
 package system
 
 import (
+	"github.com/jt0610/scaf/caddy"
+	"github.com/jt0610/scaf/codegen"
 	"os/user"
+	"strings"
 	"time"
 )
 
@@ -40,5 +43,25 @@ func (s *System) AddModule(m *Module) {
 	s.Modules = append(s.Modules, m)
 }
 
-func (s *System) UpdateCaddy() {
+func (s *System) Caddyfile() *caddy.Caddyfile {
+	cf := caddy.NewCaddyfile(&codegen.Options{
+		Package:      s.Name,
+		UIPortStart:  3000,
+		APIPortStart: 8000,
+		PortTimeout:  time.Duration(10) * time.Millisecond,
+	}, strings.ToLower(s.Name)+".bot")
+	if s.Kind == Device || s.Kind == Software {
+		cf.AddServer(&caddy.Server{
+			Kind: caddy.UI,
+			Addr: "localhost",
+		})
+	}
+	for _, m := range s.Modules {
+		cf.AddServer(&caddy.Server{
+			Kind: caddy.API,
+			Addr: "localhost",
+			Path: "/" + m.Name,
+		})
+	}
+	return cf
 }
