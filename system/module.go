@@ -2,6 +2,15 @@ package system
 
 type UIType string
 
+type Language string
+
+const (
+	Go      Language = "go"
+	Python  Language = "python"
+	Fortran Language = "fortran"
+	C       Language = "c"
+)
+
 // Module represents a specific component or functionality of the System.
 type Module struct {
 	// Name is the identifier of the module.

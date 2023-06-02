@@ -22,7 +22,6 @@ type System struct {
 	Date    string `yaml:"date"`
 	Name    string `prompt:"What is the name of this system?" default:"System"`
 	Kind    Kind   `prompt:"What kind of system is this?" options:"device,software,library" default:"device"`
-	HasUI   bool   `prompt:"Does this system need a UI?" default:"false"`
 	Modules []*Module
 }
 
@@ -52,12 +51,6 @@ func (s *System) Caddyfile() *caddy.Caddyfile {
 		APIPortStart: 8000,
 		PortTimeout:  time.Duration(10) * time.Millisecond,
 	}, strings.ToLower(s.Name)+".bot")
-	if s.HasUI {
-		cf.AddServer(&caddy.Server{
-			Kind: caddy.UI,
-			Addr: "localhost",
-		})
-	}
 	for _, m := range s.Modules {
 		cf.AddServer(&caddy.Server{
 			Kind: caddy.API,
