@@ -16,16 +16,17 @@ const (
 	Library  Kind = "library"
 )
 
-type Language string
-
+// System is the top-level struct for a system.
 type System struct {
 	Author  string `yaml:"author"`
 	Date    string `yaml:"date"`
 	Name    string `prompt:"What is the name of this system?" default:"System"`
 	Kind    Kind   `prompt:"What kind of system is this?" options:"device,software,library" default:"device"`
+	HasUI   bool   `prompt:"Does this system need a UI?" default:"false"`
 	Modules []*Module
 }
 
+// FillMetadata fills in the metadata for the system.
 func (s *System) FillMetadata() error {
 	u, err := user.Current()
 	if err != nil {
@@ -43,6 +44,7 @@ func (s *System) AddModule(m *Module) {
 	s.Modules = append(s.Modules, m)
 }
 
+// Caddyfile returns a Caddyfile for the system.
 func (s *System) Caddyfile() *caddy.Caddyfile {
 	cf := caddy.NewCaddyfile(&codegen.Options{
 		Package:      s.Name,
@@ -50,7 +52,7 @@ func (s *System) Caddyfile() *caddy.Caddyfile {
 		APIPortStart: 8000,
 		PortTimeout:  time.Duration(10) * time.Millisecond,
 	}, strings.ToLower(s.Name)+".bot")
-	if s.Kind == Device || s.Kind == Software {
+	if s.HasUI {
 		cf.AddServer(&caddy.Server{
 			Kind: caddy.UI,
 			Addr: "localhost",

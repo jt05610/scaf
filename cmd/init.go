@@ -39,10 +39,45 @@ frequency of the blinking LED. This can be switched off with the --no-blinky fla
 				ctx.Logger.Panic("could not close system.yaml", zap.Error(err))
 			}
 		}(f)
-		err = hndl.CreateSystem(ctx, f)
+		sys, err := hndl.CreateSystem(ctx, f)
 		if err != nil {
 			ctx.Logger.Panic("could not create system", zap.Error(err))
 		}
+		ctx.Logger.Info("created system", zap.String("name", sys.Name))
+		ctx.Logger.Info("wrote system.yaml")
+		cf := sys.Caddyfile()
+		err = os.MkdirAll("config", 0755)
+		caddyConfig, err := os.Create("config/Caddyfile.yaml")
+		if err != nil {
+			ctx.Logger.Panic("could not create Caddyfile config", zap.Error(err))
+		}
+		defer func(f *os.File) {
+			err := f.Close()
+			if err != nil {
+				ctx.Logger.Panic("could not close Caddyfile config", zap.Error(err))
+			}
+		}(caddyConfig)
+		err = hndl.CaddyService.Flush(caddyConfig, cf)
+		if err != nil {
+			ctx.Logger.Panic("could not flush Caddyfile config", zap.Error(err))
+		}
+		ctx.Logger.Info("created config/Caddyfile.yaml")
+
+		nf, err := os.Create("Caddyfile")
+		if err != nil {
+			ctx.Logger.Panic("could not create Caddyfile", zap.Error(err))
+		}
+		defer func(f *os.File) {
+			err := f.Close()
+			if err != nil {
+				ctx.Logger.Panic("could not close Caddyfile", zap.Error(err))
+			}
+		}(nf)
+		err = hndl.CaddyRenderer.Flush(nf, cf)
+		if err != nil {
+			ctx.Logger.Panic("could not flush Caddyfile", zap.Error(err))
+		}
+		ctx.Logger.Info("created Caddyfile")
 	},
 }
 

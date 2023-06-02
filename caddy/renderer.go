@@ -4,10 +4,25 @@ import (
 	"fmt"
 	"github.com/jt0610/scaf/codegen"
 	"github.com/jt0610/scaf/service"
+	"html/template"
 	"io"
 	"net"
 	"time"
 )
+
+var caddyfileTemplate = `
+{{.Addr}} {
+{{- range .Frontends}}
+    reverse_proxy {{if .Path}}{{.Path}}/*{{else}}*{{end}} {{.Addr}}:{{.Port}}
+{{- end}}
+}
+
+api.{{.Addr}} {
+{{- range .APIs}}
+    reverse_proxy {{if .Path}}{{.Path}}/*{{else}}*{{end}} {{.Addr}}:{{.Port}}
+{{- end}}
+}
+`
 
 type ServerKind string
 
@@ -105,8 +120,7 @@ func (r *renderer) Flush(w io.Writer, f *Caddyfile) error {
 			f.Frontends = append(f.Frontends, s)
 		}
 	}
-
-	t, err := codegen.Load("caddyfile.gotpl")
+	t, err := template.New("caddyfile").Parse(caddyfileTemplate)
 	if err != nil {
 		return err
 	}

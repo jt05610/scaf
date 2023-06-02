@@ -6,16 +6,21 @@ import (
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
+	"path/filepath"
 	"time"
 )
 
 func newLogger(ctx context.Context, name string, l zapcore.Level) *zap.Logger {
+	err := os.MkdirAll("logs", 0755)
+	if err != nil && !os.IsExist(err) {
+		panic(err)
+	}
 	z := zap.New(
 		zapcore.NewCore(
 			zapcore.NewJSONEncoder(encoderCfg),
 			zapcore.AddSync(
 				&lumberjack.Logger{
-					Filename:   name,
+					Filename:   filepath.Join(".", "logs", name+".log"),
 					MaxSize:    100,
 					MaxAge:     7,
 					MaxBackups: 5,

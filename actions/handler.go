@@ -19,6 +19,8 @@ type Handler struct {
 	CaddyService service.Service[*caddy.Caddyfile]
 	// ModService is a service.Service specialized to work with system.Module.
 	ModService service.Service[*system.Module]
+	// CaddyRenderer is a service.Renderer specialized to work with caddy.Caddyfile.
+	CaddyRenderer service.Renderer[*caddy.Caddyfile]
 }
 
 // YamlHandler returns a new instance of Handler with its context set to the provided context and its services initialized to instances of yaml.YAMLService for system.System and system.Module.
@@ -28,6 +30,7 @@ func YamlHandler(ctx context.Context) *Handler {
 		Ctx:           ctx,
 		SystemService: yaml.NewYAMLService[*system.System](),
 		CaddyService:  yaml.NewYAMLService[*caddy.Caddyfile](),
+		CaddyRenderer: caddy.Renderer("."),
 		ModService:    yaml.NewYAMLService[*system.Module](),
 	}
 }
