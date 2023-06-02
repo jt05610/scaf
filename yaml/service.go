@@ -1,7 +1,7 @@
 package yaml
 
 import (
-	"github.com/jt0610/scaf/service"
+	"github.com/jt05610/scaf/service"
 	"gopkg.in/yaml.v3"
 	"io"
 )

@@ -1,12 +1,10 @@
 package actions
 
 import (
-	"github.com/jt0610/scaf/context"
-	"github.com/jt0610/scaf/system"
-	"github.com/jt0610/scaf/wizard"
+	"github.com/jt05610/scaf/context"
+	"github.com/jt05610/scaf/system"
+	"github.com/jt05610/scaf/wizard"
 	"io"
-	"os"
-	"path/filepath"
 )
 
 // CreateSystem is a method of Handler that facilitates the creation of a new system.
@@ -33,13 +31,6 @@ func (h *Handler) CreateModule(ctx context.Context) (*system.Module, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = os.MkdirAll("modules/"+mod.Name, 0755)
-	if err != nil {
-		return nil, err
-	}
-	wr, err := os.Create(filepath.Join("modules", mod.Name, "module.yaml"))
-	if err != nil {
-		return nil, err
-	}
-	return mod, h.ModService.Flush(wr, mod)
+
+	return mod, nil
 }

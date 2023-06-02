@@ -10,8 +10,9 @@ import (
 	"time"
 )
 
-func newLogger(ctx context.Context, name string, l zapcore.Level) *zap.Logger {
-	err := os.MkdirAll("logs", 0755)
+func newLogger(ctx context.Context, parDir, name string, l zapcore.Level) *zap.Logger {
+	par := filepath.Join(parDir, "logs")
+	err := os.MkdirAll(par, 0755)
 	if err != nil && !os.IsExist(err) {
 		panic(err)
 	}
@@ -20,7 +21,7 @@ func newLogger(ctx context.Context, name string, l zapcore.Level) *zap.Logger {
 			zapcore.NewJSONEncoder(encoderCfg),
 			zapcore.AddSync(
 				&lumberjack.Logger{
-					Filename:   filepath.Join(".", "logs", name+".log"),
+					Filename:   filepath.Join(par, name+".log"),
 					MaxSize:    100,
 					MaxAge:     7,
 					MaxBackups: 5,
@@ -98,13 +99,13 @@ func newSampler(ctx context.Context, name string, l zapcore.Level, freq time.Dur
 	return z
 }
 
-func NewProd(ctx context.Context, name string) *zap.Logger {
-	l := newLogger(ctx, name, zapcore.InfoLevel)
+func NewProd(ctx context.Context, parDir, name string) *zap.Logger {
+	l := newLogger(ctx, parDir, name, zapcore.InfoLevel)
 	return l
 }
 
-func NewDev(ctx context.Context, name string) *zap.Logger {
-	l := newLogger(ctx, name, zapcore.DebugLevel)
+func NewDev(ctx context.Context, parDir, name string) *zap.Logger {
+	l := newLogger(ctx, parDir, name, zapcore.DebugLevel)
 	return l
 }
 

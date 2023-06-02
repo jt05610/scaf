@@ -3,16 +3,14 @@ package caddy_test
 import (
 	"bytes"
 	"github.com/google/go-cmp/cmp"
-	"github.com/jt0610/scaf/caddy"
-	"github.com/jt0610/scaf/codegen"
+	"github.com/jt05610/scaf/caddy"
 	"os"
 	"testing"
 	"time"
 )
 
 func TestRenderer_Render(t *testing.T) {
-	opt := &codegen.Options{
-		Package:      "",
+	opt := &caddy.Options{
 		UIPortStart:  3000,
 		APIPortStart: 8000,
 		PortTimeout:  time.Duration(10) * time.Millisecond,

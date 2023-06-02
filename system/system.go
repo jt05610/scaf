@@ -1,8 +1,7 @@
 package system
 
 import (
-	"github.com/jt0610/scaf/caddy"
-	"github.com/jt0610/scaf/codegen"
+	"github.com/jt05610/scaf/caddy"
 	"os/user"
 	"strings"
 	"time"
@@ -36,17 +35,17 @@ func (s *System) FillMetadata() error {
 	return nil
 }
 
-func (s *System) AddModule(m *Module) {
+func (s *System) AddModule(m *Module) error {
 	if s.Modules == nil {
 		s.Modules = make([]*Module, 0)
 	}
 	s.Modules = append(s.Modules, m)
+	return nil
 }
 
 // Caddyfile returns a Caddyfile for the system.
 func (s *System) Caddyfile() *caddy.Caddyfile {
-	cf := caddy.NewCaddyfile(&codegen.Options{
-		Package:      s.Name,
+	cf := caddy.NewCaddyfile(&caddy.Options{
 		UIPortStart:  3000,
 		APIPortStart: 8000,
 		PortTimeout:  time.Duration(10) * time.Millisecond,

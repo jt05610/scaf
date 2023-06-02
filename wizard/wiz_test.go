@@ -1,9 +1,9 @@
 package wizard_test
 
 import (
-	"github.com/jt0610/scaf/context"
-	"github.com/jt0610/scaf/wizard"
-	"github.com/jt0610/scaf/zap"
+	"github.com/jt05610/scaf/context"
+	"github.com/jt05610/scaf/wizard"
+	"github.com/jt05610/scaf/zap"
 	"testing"
 )
 
@@ -21,7 +21,7 @@ func TestWizard(t *testing.T) {
 
 	w := &wizard.Wizard[Person]{}
 
-	logger := zap.NewDev(context.Background(), "wizard_test")
+	logger := zap.NewDev(context.Background(), ".", "wizard_test")
 	ctx := context.NewContext(logger)
 	p, err := w.Run(ctx)
 	if err != nil {

@@ -5,9 +5,9 @@ Copyright © 2023 Jonathan Taylor jonrtaylor12@gmail.com
 package cmd
 
 import (
-	"github.com/jt0610/scaf/actions"
-	"github.com/jt0610/scaf/context"
-	"github.com/jt0610/scaf/zap"
+	"github.com/jt05610/scaf/actions"
+	"github.com/jt05610/scaf/context"
+	"github.com/jt05610/scaf/zap"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -16,6 +16,7 @@ import (
 var cfgFile string
 var hndl *actions.Handler
 var ctx context.Context
+var parDir string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -38,7 +39,7 @@ For example, with scaf, you can:
 }
 
 func Execute() {
-	ctx = context.NewContext(zap.NewProd(context.Background(), "init"))
+	ctx = context.NewContext(zap.NewProd(context.Background(), parDir, "init"))
 	hndl = actions.YamlHandler(ctx)
 	err := rootCmd.Execute()
 	if err != nil {
@@ -48,4 +49,5 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "$HOME/.scaf.yaml", "config file (default is $HOME/.scaf.yaml)")
+	rootCmd.PersistentFlags().StringVarP(&parDir, "parent", "p", ".", "parent directory for system")
 }

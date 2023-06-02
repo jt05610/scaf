@@ -1,4 +1,4 @@
-module github.com/jt0610/scaf
+module github.com/jt05610/scaf
 
 go 1.20
 

@@ -2,8 +2,7 @@ package caddy
 
 import (
 	"fmt"
-	"github.com/jt0610/scaf/codegen"
-	"github.com/jt0610/scaf/service"
+	"github.com/jt05610/scaf/service"
 	"html/template"
 	"io"
 	"net"
@@ -94,7 +93,13 @@ func (c *Caddyfile) AddServer(s *Server) {
 	c.Servers = append(c.Servers, s)
 }
 
-func NewCaddyfile(opt *codegen.Options, addr string) *Caddyfile {
+type Options struct {
+	APIPortStart int
+	UIPortStart  int
+	PortTimeout  time.Duration
+}
+
+func NewCaddyfile(opt *Options, addr string) *Caddyfile {
 	return &Caddyfile{
 		Addr:    addr,
 		Servers: make([]*Server, 0),
