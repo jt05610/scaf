@@ -13,5 +13,9 @@ func (h *Handler) CreateSystem(ctx context.Context, writer io.Writer) error {
 	if err != nil {
 		return err
 	}
+	err = sys.FillMetadata()
+	if err != nil {
+		return err
+	}
 	return h.SystemService.Flush(writer, sys)
 }

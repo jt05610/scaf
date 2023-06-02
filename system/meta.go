@@ -17,4 +17,5 @@ func (m *Metadata) Update() error {
 
 func (m *Metadata) Create() error {
 	m.CreatedAt = time.Now()
+	return nil
 }

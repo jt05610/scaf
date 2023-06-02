@@ -3,6 +3,7 @@ package caddy
 import (
 	"fmt"
 	"github.com/jt0610/scaf/codegen"
+	"github.com/jt0610/scaf/service"
 	"io"
 	"net"
 	"time"
@@ -96,7 +97,19 @@ type renderer struct {
 	parDir string
 }
 
-func (r *renderer) Render(w io.Writer, f *Caddyfile) error {
+func (r *renderer) Load(rdr io.Reader) (*Caddyfile, error) {
+	t, err := codegen.Load("caddyfile.gotpl")
+	if err != nil {
+		return nil, err
+	}
+	f := &Caddyfile{}
+}
+
+func (r *renderer) Suffix() string {
+	return "Caddyfile"
+}
+
+func (r *renderer) Flush(w io.Writer, f *Caddyfile) error {
 	for _, s := range f.Servers {
 		if s.Kind == API {
 			f.APIs = append(f.APIs, s)
@@ -112,6 +125,6 @@ func (r *renderer) Render(w io.Writer, f *Caddyfile) error {
 	return t.Execute(w, f)
 }
 
-func NewRenderer(parDir string) codegen.Renderer[*Caddyfile] {
+func Service(parDir string) service.Service[*Caddyfile] {
 	return &renderer{parDir: parDir}
 }
