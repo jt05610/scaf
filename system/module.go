@@ -10,10 +10,19 @@ const (
 	Fortran    Language = "fortran"
 	C          Language = "c"
 	TypeScript Language = "typescript"
+	Excel      Language = "excel"
 )
+
+// Field represents a field in a struct.
+type Field struct {
+	Name string
+	Type string
+}
 
 // Module represents a specific component or functionality of the System.
 type Module struct {
+	// Author is the author of the module.
+	Author string
 	// Name is the identifier of the module.
 	Name string `prompt:"What is the name of this module?" default:"Module"`
 
@@ -28,8 +37,15 @@ type Module struct {
 
 	Functions []*Function
 
+	HasUi bool `prompt:"Does this module have a UI?" default:"false"`
+
 	// Externals are any external dependencies or modules needed by this module.
 	Externals []string
+
+	Fields []*Field
+
+	Addr string
+	Port int
 }
 
 type ModuleGenerator interface {

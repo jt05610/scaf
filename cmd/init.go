@@ -5,7 +5,9 @@ Copyright © 2023 Jonathan Taylor jonrtaylor12@gmail.com
 package cmd
 
 import (
+	"github.com/jt05610/scaf/context"
 	"github.com/jt05610/scaf/system"
+	sz "github.com/jt05610/scaf/zap"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"os"
@@ -31,6 +33,7 @@ By default, scaf generates blinky: a system with the ability to control the colo
 frequency of the blinking LED. This can be switched off with the --no-blinky flag.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
+		ctx = context.NewContext(sz.NewProd(context.Background(), parDir, "init"))
 		err := os.MkdirAll(parDir, 0755)
 		if err != nil {
 			ctx.Logger.Panic("could not create parent directory", zap.Error(err))

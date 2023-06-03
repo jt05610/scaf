@@ -40,6 +40,9 @@ func (s *System) AddModule(m *Module) error {
 		s.Modules = make([]*Module, 0)
 	}
 	s.Modules = append(s.Modules, m)
+	cf := s.Caddyfile()
+	m.Addr = cf.Servers[len(s.Modules)-1].Addr
+	m.Port = cf.Servers[len(s.Modules)-1].Port
 	return nil
 }
 
@@ -51,8 +54,14 @@ func (s *System) Caddyfile() *caddy.Caddyfile {
 		PortTimeout:  time.Duration(10) * time.Millisecond,
 	}, strings.ToLower(s.Name)+".bot")
 	for _, m := range s.Modules {
+		var kind caddy.ServerKind
+		if m.HasUi {
+			kind = caddy.UI
+		} else {
+			kind = caddy.API
+		}
 		cf.AddServer(&caddy.Server{
-			Kind: caddy.API,
+			Kind: kind,
 			Addr: "localhost",
 			Path: "/" + m.Name,
 		})

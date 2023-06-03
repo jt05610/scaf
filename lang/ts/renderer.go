@@ -1,53 +1,35 @@
 package ts
 
 import (
-	"github.com/jt05610/scaf/system"
-	"html/template"
-	"os"
+	"github.com/jt05610/scaf/lang"
 	"path/filepath"
 )
 
-type generator struct {
-	parDir string
-}
-
-func (g *generator) pkgJson(m system.Module) error {
-	f, err := os.Create(filepath.Join(g.parDir, "package.json"))
-	if err != nil {
-		return err
-	}
-	pkg := packageJson()
-	return pkg.Execute(f, m)
-}
-
-type file struct {
-	Path    string
-	TmpFunc func() *template.Template
-}
-
-func (g *generator) Generate(m *system.Module) error {
-	for _, f := range []file{
+func Files(parDir string) []*lang.File {
+	return []*lang.File{
 		{
-			Path:    filepath.Join(g.parDir, "package.json"),
-			TmpFunc: packageJson,
+			Path:    filepath.Join(parDir, "package.json"),
+			TmpFunc: PackageJson,
 		},
-	} {
-		fp, err := os.Create(f.Path)
-		if err != nil {
-			return err
-		}
-		err = f.TmpFunc().Execute(fp, m)
-		if err != nil {
-			return err
-		}
-		err = fp.Close()
-		if err != nil {
-			return err
-		}
+		{
+			Path:    filepath.Join(parDir, "tsconfig.json"),
+			TmpFunc: tsconfigJson,
+		},
+		{
+			Path:    filepath.Join(parDir, "index.html"),
+			TmpFunc: indexHtml,
+		},
+		{
+			Path:    filepath.Join(parDir, "vite.config.ts"),
+			TmpFunc: viteConfigTs,
+		},
+		{
+			Path:    filepath.Join(parDir, "src", "index.tsx"),
+			TmpFunc: indexTsx,
+		},
+		{
+			Path:    filepath.Join(parDir, "src", "app.tsx"),
+			TmpFunc: appTsx,
+		},
 	}
-	return nil
-}
-
-func NewGenerator(parDir string) system.ModuleGenerator {
-	return &generator{parDir: parDir}
 }

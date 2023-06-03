@@ -7,7 +7,6 @@ package cmd
 import (
 	"github.com/jt05610/scaf/actions"
 	"github.com/jt05610/scaf/context"
-	"github.com/jt05610/scaf/zap"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -39,7 +38,6 @@ For example, with scaf, you can:
 }
 
 func Execute() {
-	ctx = context.NewContext(zap.NewProd(context.Background(), parDir, "init"))
 	hndl = actions.YamlHandler(ctx)
 	err := rootCmd.Execute()
 	if err != nil {
