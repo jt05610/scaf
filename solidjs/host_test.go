@@ -1,20 +1,20 @@
 package solidjs_test
 
 import (
-	solidjs2 "github.com/jt0610/scaf/solidjs"
+	"github.com/jt05610/scaf/solidjs"
 	"testing"
 )
 
 func TestHost(t *testing.T) {
 	out := "testing/actual/host"
-	host := &solidjs2.Host{
+	host := &solidjs.Host{
 		Port: 3000,
-		Remotes: []*solidjs2.Remote{
+		Remotes: []*solidjs.Remote{
 			{
 				Name: "test",
 				Addr: "localhost",
 				Port: 3001,
-				Exposes: []*solidjs2.PublicAsset{
+				Exposes: []*solidjs.PublicAsset{
 					{
 						Name: "test",
 						Path: "/test",
@@ -23,7 +23,7 @@ func TestHost(t *testing.T) {
 			},
 		},
 	}
-	renderer := solidjs2.NewHostRenderer(out)
+	renderer := solidjs.NewHostRenderer(out)
 
 	err := renderer.Render(nil, host)
 	if err != nil {
