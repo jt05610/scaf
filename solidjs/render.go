@@ -2,7 +2,7 @@ package solidjs
 
 import (
 	"errors"
-	"github.com/jt05610/scaf/"
+	"github.com/jt05610/scaf/core"
 	"html/template"
 	"io"
 	"os"
@@ -14,6 +14,11 @@ const MaxRecurseLevel = 10
 
 type hostRenderer struct {
 	outDir string
+}
+
+func (r *hostRenderer) Visit(m *core.Module) core.Visitor {
+	//TODO implement me
+	panic("implement me")
 }
 
 func renderFile(name, outDir string, h *Host) error {
@@ -71,6 +76,6 @@ func (r *hostRenderer) Render(_ io.Writer, h *Host) error {
 	return r.renderDir(0, h.TplDir(), h)
 }
 
-func NewHostRenderer(outDir string) codegen.Renderer[*Host] {
+func NewHostRenderer(outDir string) core.Visitor {
 	return &hostRenderer{outDir: outDir}
 }

@@ -27,18 +27,6 @@ var Dirs = builder.NewDir(func(*core.Module) string { return "graph" }, []*build
 	},
 })
 
-func runGoModInit(m *core.Module) *exec.Cmd {
-	cmd := exec.Command("go", "mod", "init", m.Name)
-	cmd.Dir = m.Name
-	return cmd
-}
-
-func runGoTidy(m *core.Module) *exec.Cmd {
-	cmd := exec.Command("go", "mod", "tidy")
-	cmd.Dir = m.Name
-	return cmd
-}
-
 func runGqlGen(m *core.Module) *exec.Cmd {
 	cmd := exec.Command("go", "run", "github.com/99designs/gqlgen", "generate")
 	cmd.Dir = m.Name
@@ -50,8 +38,9 @@ func NewBuilder() core.Visitor {
 
 	return builder.NewBuilder(
 		builder.NewDirBuilder(ParDir),
-		builder.NewRunner(runGoModInit),
-		builder.NewRunner(runGoTidy),
+		builder.NewRunner(builder.GoModInit),
+		builder.NewRunner(builder.GoModTidy),
 		builder.NewRunner(runGqlGen),
+		builder.NewRunner(builder.GoFmt),
 	)
 }

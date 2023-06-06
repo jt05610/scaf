@@ -1,7 +1,7 @@
 package core_test
 
 import (
-	"github.com/jt05610/core"
+	"github.com/jt05610/scaf/core"
 	"testing"
 )
 
