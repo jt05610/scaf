@@ -2,7 +2,7 @@ package gql
 
 import (
 	"bytes"
-	"github.com/jt05610/core"
+	"github.com/jt05610/scaf/core"
 	"testing"
 )
 
