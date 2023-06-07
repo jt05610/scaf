@@ -14,5 +14,5 @@ type Remote struct {
 }
 
 func (r *Remote) TplDir() string {
-	return "remote/tpl"
+	return "remote/template"
 }

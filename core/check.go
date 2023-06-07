@@ -5,18 +5,18 @@ type Checker struct {
 	k    int
 }
 
-func (c *Checker) Visit(m *Module) Visitor {
+func (c *Checker) Visit(m *Module) error {
 	if _, seen := c.seen[m.Name]; seen {
 		return nil
 	}
 	c.k++
 	c.seen[m.Name] = c.k
 	for _, d := range m.Deps {
-		if v := c.Visit(d); v == nil {
-			return nil
+		if err := c.Visit(d); err != nil {
+			return err
 		}
 	}
-	return c
+	return nil
 }
 
 func (c *Checker) IsAcyclic(s *System) bool {

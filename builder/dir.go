@@ -34,58 +34,46 @@ func (d *Dir) AddChild(child *Dir) {
 	d.Children = append(d.Children, child)
 }
 
-func (d *dirBuilder) buildDir(parent string, m *core.Module, dir *Dir) {
+func (d *dirBuilder) buildDir(parent string, m *core.Module, dir *Dir) error {
 	d.mu.Lock()
 	if _, seen := d.seen[dir]; seen {
-		return
+		return nil
 	}
 	d.seen[dir] = true
 	d.mu.Unlock()
 	path := filepath.Join(parent, dir.Name(m))
 	err := os.MkdirAll(path, 0755)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	var wg sync.WaitGroup
 	for _, file := range dir.Files {
-		wg.Add(1)
-		go func(file *File) {
-			defer wg.Done()
-			fp := filepath.Join(path, file.Name(m))
-			f, err := os.Create(fp)
-			if err != nil {
-				panic(err)
-			}
-			defer func() {
-				_ = f.Close()
-			}()
-			if err := file.Template.Execute(f, m); err != nil {
-				panic(err)
-			}
-		}(file)
+		fp := filepath.Join(path, file.Name(m))
+		f, err := os.Create(fp)
+		if err != nil {
+			return err
+		}
+		if err := file.Template.Execute(f, m); err != nil {
+			_ = f.Close()
+			return err
+		}
+		_ = f.Close()
 	}
 	for _, child := range dir.Children {
-		wg.Add(1)
-		go func(child *Dir) {
-			defer wg.Done()
-			d.buildDir(path, m, child)
-		}(child)
+		if err := d.buildDir(path, m, child); err != nil {
+			return err
+		}
 	}
-	wg.Wait()
+	return nil
 }
 
-func (d *dirBuilder) Visit(m *core.Module) core.Visitor {
+func (d *dirBuilder) Visit(m *core.Module) error {
 	path := filepath.Join(d.parent, m.Name)
-	var wg sync.WaitGroup
 	for _, dir := range d.dirs {
-		wg.Add(1)
-		go func(dir *Dir) {
-			defer wg.Done()
-			d.buildDir(path, m, dir)
-		}(dir)
+		if err := d.buildDir(path, m, dir); err != nil {
+			return err
+		}
 	}
-	wg.Wait()
-	return d
+	return nil
 }
 
 func NewDirBuilder(dirs ...*Dir) core.Visitor {

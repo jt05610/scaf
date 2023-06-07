@@ -15,7 +15,7 @@ type Language string
 
 const (
 	GQL        Language = "gql"
-	Protobuf   Language = "protobuf"
+	Protobuf   Language = "pb"
 	Go         Language = "go"
 	Python     Language = "python"
 	Fortran    Language = "fortran"
@@ -180,6 +180,8 @@ type Func struct {
 
 type Module struct {
 	Name     string
+	Author   string
+	Version  int
 	Date     string
 	Port     int
 	Language Language

@@ -7,5 +7,5 @@ type Host struct {
 }
 
 func (h *Host) TplDir() string {
-	return "host/tpl"
+	return "host/template"
 }

@@ -24,7 +24,10 @@ func TestDirBuilder(t *testing.T) {
 	})
 	builder := NewDirBuilder(dir).(*dirBuilder)
 	builder.parent = "testParent"
-	builder.Visit(&core.Module{Name: "testModule"})
+	err := builder.Visit(&core.Module{Name: "testModule"})
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
 
 	// Now, verify the directory and files were created as expected
 	path := "testParent/testModule/testDir"
@@ -53,7 +56,10 @@ func TestDirBuilderWithCircularDependency(t *testing.T) {
 
 	builder := NewDirBuilder(dir1).(*dirBuilder)
 	builder.parent = "testParent"
-	builder.Visit(&core.Module{Name: "testModule"})
+	err := builder.Visit(&core.Module{Name: "testModule"})
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
 
 	// Now, verify the directories and files were created as expected
 	paths := []string{

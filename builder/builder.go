@@ -31,16 +31,18 @@ func markModule(m *core.Module) {
 	}
 }
 
-func (b *Builder) Visit(module *core.Module) core.Visitor {
+func (b *Builder) Visit(module *core.Module) error {
 	if _, seen := b.seen[module.Name]; seen {
 		return nil
 	}
 	b.seen[module.Name] = true
 	markModule(module)
 	for _, v := range b.Visitors {
-		v.Visit(module)
+		if err := v.Visit(module); err != nil {
+			return err
+		}
 	}
-	return b
+	return nil
 }
 
 func NewBuilder(visitors ...core.Visitor) *Builder {
