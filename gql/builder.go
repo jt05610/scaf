@@ -25,6 +25,14 @@ var Dirs = builder.NewDir(func(*core.Module) string { return "graph" }, []*build
 		Name:     func(m *core.Module) string { return "schema.graphql" },
 		Template: gqlTemplate,
 	},
+	{
+		Name:     func(m *core.Module) string { return "schema.resolvers.go" },
+		Template: schemaResolverTemplate,
+	},
+	{
+		Name:     func(m *core.Module) string { return "resolver.go" },
+		Template: resolverTemplate,
+	},
 })
 
 func runGqlGen(m *core.Module) *exec.Cmd {
@@ -38,7 +46,6 @@ func NewBuilder() core.Visitor {
 
 	return builder.NewBuilder(
 		builder.NewDirBuilder(ParDir),
-		builder.NewRunner(builder.GoModInit),
 		builder.NewRunner(builder.GoModTidy),
 		builder.NewRunner(runGqlGen),
 		builder.NewRunner(builder.GoFmt),

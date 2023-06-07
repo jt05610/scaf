@@ -14,9 +14,19 @@ package {{.Name}};
 option go_package = "{{.Name}}/v1/{{.Name}}";
 
 message Empty {}
-
-{{- range .Types}}
+{{ range .Types}}
 message {{pascal .Name}} {
+	int64 id = 1;
+    {{- range $index, $elem := .Fields}}
+    {{typeTrans "protobuf" $elem}} {{$elem.Name}} = {{add $index 2}};
+    {{- end}}
+}
+
+message Get{{pascal .Name}}Input {
+	string id = 1;
+}
+
+message {{pascal .Name}}Input {
     {{- range $index, $elem := .Fields}}
     {{typeTrans "protobuf" $elem}} {{$elem.Name}} = {{add $index 1}};
     {{- end}}
@@ -25,24 +35,30 @@ message {{pascal .Name}} {
 message {{pluralize (pascal .Name)}} {
 	repeated {{pascal .Name}} {{pluralize (lower .Name)}} = 1;
 }
+
+
 {{- end}}
 
-service {{pascal .Name}}Service {
+service {{pascal .Name}} {
     {{- range .Funcs}}
-    rpc {{pascal .Name}} ({{pascal .Name}}Request) returns ({{pascal .Name}}Response) {}
+	rpc {{pascal .Name}} ({{pascal .Name}}Input) returns ({{pascal .Name}}Payload); 
     {{- end}}
+	{{- range .Types}}
+	rpc Get (Get{{pascal .Name}}Input) returns ({{pascal .Name}}); 
+	rpc List (Empty) returns ({{pluralize (pascal .Name)}}); 
+	{{- end}}
 }
 
 {{- range .Funcs}}
-message {{pascal .Name}}Request {
+message {{pascal .Name}}Input {
 	{{- if .Params}}
     {{- range $index, $elem := .Params}}
-    {{typeTrans "protobuf" $elem}} {{$elem.Name}} = {{add $index 1}};
+    {{inputTrans "protobuf" $elem}} {{$elem.Name}} = {{add $index 1}};
     {{- end}}
 	{{- end}}
 }
 
-message {{pascal .Name}}Response {
+message {{pascal .Name}}Payload {
 	{{- if .Return}}
     {{- range $index, $elem := .Return}}
     {{typeTrans "protobuf" $elem}} {{$elem.Name}} = {{add $index 1}};

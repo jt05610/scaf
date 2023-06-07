@@ -35,7 +35,6 @@ func (r *runner) Visit(m *core.Module) core.Visitor {
 			fmt.Println(out.String())
 		}
 	}
-
 	return r
 }
 

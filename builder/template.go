@@ -10,10 +10,13 @@ import (
 
 var funcMap = template.FuncMap{
 	"add": func(i, j int) int {
-		return i + 1
+		return i + j
 	},
 	"typeTrans": func(l core.Language, f core.Field) string {
 		return f.TypeString(l)
+	},
+	"inputTrans": func(l core.Language, f core.Field) string {
+		return f.InputString(l)
 	},
 	"pluralize": pluralize.NewClient().Plural,
 	"lower":     cases.Lower(language.Und).String,

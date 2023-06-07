@@ -1,12 +1,22 @@
 package protobuf
 
 import (
+	"github.com/jt05610/scaf/builder"
 	"github.com/jt05610/scaf/core"
+	"github.com/jt05610/scaf/gql"
 	"os"
 	"testing"
 )
 
 func TestBuilder(t *testing.T) {
+	choreType := &core.Type{
+		Name: "Chore",
+		Fields: []*core.Field{
+			{Name: "complete", Type: core.Bool},
+			{Name: "description", Type: core.String},
+		},
+		Query: true,
+	}
 	tests := []struct {
 		name   string
 		module *core.Module
@@ -18,20 +28,13 @@ func TestBuilder(t *testing.T) {
 				Port: 8081,
 				Date: "06 Jun 2023",
 				Types: []*core.Type{
-					{
-						Name: "Chore",
-						Fields: []*core.Field{
-							{Name: "complete", Type: core.Bool},
-							{Name: "description", Type: core.String},
-						},
-						HasPlural: true,
-					},
+					choreType,
 				},
 				Funcs: []*core.Func{
 					{
 						Name: "Add",
 						Params: []*core.Field{
-							{Name: "chores", Type: core.Custom, CustomType: "Chores"},
+							{Name: "chores", Type: core.Array(choreType)},
 						},
 						Return: []*core.Field{
 							{Name: "message", Type: core.String},
@@ -54,7 +57,7 @@ func TestBuilder(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			_ = os.RemoveAll(test.module.Name)
-			b := NewBuilder()
+			b := builder.NewBuilder(NewBuilder(), gql.NewBuilder())
 			v := b.Visit(test.module)
 			if v == nil {
 			}
