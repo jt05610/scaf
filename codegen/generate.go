@@ -23,6 +23,7 @@ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. v1/{{.Name}}.proto
 go mod tidy
 go generate ./...
+mkcert {{.Name}}.local localhost 127.0.0.1 ::1
 go fmt ./...
 `
 var funcMap = template.FuncMap{

@@ -1,0 +1,72 @@
+package service
+{{- $pkgName := .Name}}
+import (
+	"context"
+	"fmt"
+	"{{.Name}}/v1"
+	"sync"
+)
+
+type {{pascal .Name}}Server struct {
+	mu     sync.Mutex
+	chores []*{{.Name}}.Chore
+	{{.Name}}.Unimplemented{{pascal .Name}}Server
+}
+
+func (h *{{pascal .Name}}Server) Add(_ context.Context, input *{{.Name}}.AddInput) (*{{.Name}}.AddPayload, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	for _, c := range input.Chores {
+		h.chores = append(h.chores, &{{.Name}}.Chore{
+			Complete:    c.Complete,
+			Description: c.Description,
+		})
+	}
+	return &{{.Name}}.AddPayload{Message: "ok"}, nil
+}
+{{- range .Types}}
+
+func (h *{{pascal $pkgName}}Server) Get(_ context.Context, req *{{$pkgName}}.Get{{pascal .Name}}Input) (
+*{{$pkgName}}.{{pascal .Name}}, error) {
+    h.mu.Lock()
+    defer h.mu.Unlock()
+    for _, c := range h.{{pluralize (lower .Name)}} {
+        if c.Id == req.Id {
+            return c, nil
+        }
+    }
+    return nil, fmt.Errorf("{{pascal .Name}} %d not found", req.Id)
+}
+
+func (h *{{pascal $pkgName}}Server) List(_ context.Context, _ *{{$pkgName}}.Empty) (
+	*{{$pkgName}}.{{pluralize (pascal .Name)}}, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.{{pluralize (lower .Name)}} == nil {
+		h.{{pluralize (lower .Name)}} = make([]*{{$pkgName}}.{{pascal .Name}}, 0)
+	}
+	return &{{$pkgName}}.{{pluralize (pascal .Name)}}{
+	    {{pluralize (pascal .Name)}}: h.{{pluralize (lower .Name)}},
+    }, nil
+}
+
+{{- end}}
+
+func (h *{{pascal .Name}}Server) Complete(_ context.Context, req *{{.Name}}.CompleteInput) (
+	*{{.Name}}.CompletePayload, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if h.chores == nil || req.ChoreNumber < 1 || int(req.ChoreNumber) > len(h.chores) {
+		return nil, fmt.Errorf("chore %d not found", req.ChoreNumber)
+	}
+	h.chores[req.ChoreNumber-1].Complete = true
+
+	return &{{.Name}}.CompletePayload{Message: "ok"}, nil
+}
+
+func Service() {{.Name}}.{{pascal .Name}}Server {
+	return &{{pascal .Name}}Server{
+		chores: make([]*{{.Name}}.Chore, 0),
+	}
+}

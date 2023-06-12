@@ -15,6 +15,7 @@ import (
 {{- range .Funcs}}
 // {{.Name}} is the resolver for the {{.Name}} field.
 func (r *mutationResolver) {{.Name}}(ctx context.Context, input *{{$pkgName}}.{{.Name}}Input) (*housework.{{.Name}}Payload, error) {
+
 	return r.{{$pkgName}}.{{.Name}}(ctx, input)
 }
 
@@ -24,7 +25,11 @@ func (r *mutationResolver) {{.Name}}(ctx context.Context, input *{{$pkgName}}.{{
 {{- if .Query}}
 // {{.Name}} is the resolver for the {{.Name}} field.
 func (r *queryResolver) {{.Name}}(ctx context.Context, id string) (*{{$pkgName}}.{{.Name}}, error) {
-	return r.{{$pkgName}}.Get(ctx, &{{$pkgName}}.Get{{.Name}}Input{Id: id})
+	iId, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, err
+	}
+	return r.{{$pkgName}}.Get(ctx, &{{$pkgName}}.Get{{.Name}}Input{Id: int64(iId)})
 }
 
 // {{pluralize .Name}} is the resolver for the {{pluralize .Name}} field.
@@ -38,3 +43,13 @@ func (r *queryResolver) {{pluralize .Name}}(ctx context.Context) ([]*{{$pkgName}
 
 {{- end}}
 {{- end}}
+
+
+// Mutation returns MutationResolver implementation.
+func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+
+// Query returns QueryResolver implementation.
+func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
+
+type mutationResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }

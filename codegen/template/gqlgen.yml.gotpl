@@ -1,17 +1,17 @@
 schema:
-  - graph/*.graphql
+  - v1/graph/*.graphql
 
 exec:
-  filename: graph/generated.go
+  filename: v1/graph/generated.go
   package: graph
 
 federation:
-  filename: graph/federation.go
+  filename: v1/graph/federation.go
   package: graph
 
 resolver:
   layout: follow-schema
-  dir: graph
+  dir: v1/graph
   package: graph
   filename_template: "{name}.resolvers.go"
 
