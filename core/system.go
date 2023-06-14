@@ -2,6 +2,8 @@ package core
 
 type System struct {
 	Name    string
+	Author  string
+	Date    string
 	Modules []*Module
 }
 

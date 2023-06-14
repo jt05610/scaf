@@ -22,15 +22,16 @@ var templates embed.FS
 var sysTemplates embed.FS
 
 var Commands = `
+mkcert {{.Name}}.local localhost 127.0.0.1 ::1
+mv {{.Name}}.local+3.pem {{.Name}}.local+3-key.pem ./cmd/.secrets
 go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. v1/{{.Name}}.proto
 go mod tidy
 go generate ./...
-mkcert {{.Name}}.local localhost 127.0.0.1 ::1
-mv *.pem ./cmd/.secrets
 go fmt ./...
 `
+
 var funcMap = template.FuncMap{
 	"add": func(i, j int) int {
 		return i + j
@@ -61,8 +62,8 @@ type Generator struct {
 	fs      embed.FS
 }
 
-func (g *Generator) nameTemplate(n string, fsName string) *template.Template {
-	fn := strings.ReplaceAll(strings.TrimSuffix(n, ".gotpl"), fsName, "{{.Name}}")
+func (g *Generator) nameTemplate(n string, fsName string, newValue string) *template.Template {
+	fn := strings.ReplaceAll(strings.TrimSuffix(n, ".gotpl"), fsName, newValue)
 	fn = filepath.Join(g.parent, fn)
 	return template.Must(template.New(n).Funcs(funcMap).Parse(fn))
 }
@@ -73,7 +74,13 @@ func (g *Generator) load(parent string, fsName string, fs embed.FS, ff fs.DirEnt
 	}
 	g.seen[ff] = true
 	path := filepath.Join(parent, ff.Name())
-	entry := &Entry{Path: g.nameTemplate(path, fsName), Children: make([]*Entry, 0)}
+	var entry *Entry
+	if fsName == "system" {
+		entry = &Entry{Path: g.nameTemplate(path, fsName, "."), Children: make([]*Entry, 0)}
+	} else {
+
+		entry = &Entry{Path: g.nameTemplate(path, fsName, "{{.Name}}"), Children: make([]*Entry, 0)}
+	}
 	if ff.IsDir() {
 		dirEntries, err := fs.ReadDir(path)
 		if err != nil {
@@ -185,8 +192,26 @@ func (g *Generator) Init(s *core.System) error {
 			return err
 		}
 	}
-	cmd := exec.Command("npm", "install")
+	cmd := exec.Command("mv", "gitignore", ".gitignore")
 	cmd.Dir = filepath.Join(g.parent)
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	cmd = exec.Command("git", "init", "&&", "git", "add", "*")
+	cmd.Dir = filepath.Join(g.parent)
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	cmd = exec.Command("npm", "install")
+	cmd.Dir = filepath.Join(g.parent)
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
