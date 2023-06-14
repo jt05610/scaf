@@ -45,8 +45,14 @@ func TestGenerate(t *testing.T) {
 			},
 		},
 	}
-	gen := builder.NewBuilder(Generator("testing"), builder.NewRunner("testing", Commands))
-	err := gen.Visit(mod)
+	gen := New("testing")
+	s := &core.System{Name: "testing", Modules: []*core.Module{mod}}
+	err := gen.Init(s)
+	if err != nil {
+		t.Error(err)
+	}
+	bld := builder.NewBuilder(gen, builder.NewRunner("testing", Commands))
+	err = bld.Visit(mod)
 	if err != nil {
 		t.Error(err)
 	}

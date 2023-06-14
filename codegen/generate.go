@@ -9,6 +9,7 @@ import (
 	"golang.org/x/text/language"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -17,6 +18,9 @@ import (
 //go:embed template
 var templates embed.FS
 
+//go:embed system
+var sysTemplates embed.FS
+
 var Commands = `
 go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
@@ -24,6 +28,7 @@ protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. v1
 go mod tidy
 go generate ./...
 mkcert {{.Name}}.local localhost 127.0.0.1 ::1
+mv *.pem ./cmd/.secrets
 go fmt ./...
 `
 var funcMap = template.FuncMap{
@@ -48,7 +53,7 @@ type Entry struct {
 	Children []*Entry
 }
 
-type generator struct {
+type Generator struct {
 	entries []*Entry
 	tplDir  string
 	seen    map[fs.DirEntry]bool
@@ -56,32 +61,32 @@ type generator struct {
 	fs      embed.FS
 }
 
-func (g *generator) nameTemplate(n string) *template.Template {
-	fn := strings.ReplaceAll(strings.TrimSuffix(n, ".gotpl"), g.tplDir, "{{.Name}}")
+func (g *Generator) nameTemplate(n string, fsName string) *template.Template {
+	fn := strings.ReplaceAll(strings.TrimSuffix(n, ".gotpl"), fsName, "{{.Name}}")
 	fn = filepath.Join(g.parent, fn)
 	return template.Must(template.New(n).Funcs(funcMap).Parse(fn))
 }
 
-func (g *generator) load(parent string, ff fs.DirEntry) *Entry {
+func (g *Generator) load(parent string, fsName string, fs embed.FS, ff fs.DirEntry) *Entry {
 	if _, seen := g.seen[ff]; seen {
 		return nil
 	}
 	g.seen[ff] = true
 	path := filepath.Join(parent, ff.Name())
-	entry := &Entry{Path: g.nameTemplate(path), Children: make([]*Entry, 0)}
+	entry := &Entry{Path: g.nameTemplate(path, fsName), Children: make([]*Entry, 0)}
 	if ff.IsDir() {
-		dirEntries, err := g.fs.ReadDir(path)
+		dirEntries, err := fs.ReadDir(path)
 		if err != nil {
 			panic(err)
 		}
 		for _, de := range dirEntries {
-			ep := g.load(path, de)
+			ep := g.load(path, fsName, fs, de)
 			if ep != nil {
 				entry.Children = append(entry.Children, ep)
 			}
 		}
 	} else {
-		f, err := g.fs.ReadFile(path)
+		f, err := fs.ReadFile(path)
 		if err != nil {
 			panic(err)
 		}
@@ -93,7 +98,7 @@ func (g *generator) load(parent string, ff fs.DirEntry) *Entry {
 	return entry
 }
 
-func (g *generator) gen(m *core.Module, e *Entry) error {
+func (g *Generator) gen(m *core.Module, e *Entry) error {
 	var pathBuffer bytes.Buffer
 	err := e.Path.Execute(&pathBuffer, m)
 	if err != nil {
@@ -123,7 +128,37 @@ func (g *generator) gen(m *core.Module, e *Entry) error {
 	return nil
 }
 
-func (g *generator) Visit(m *core.Module) error {
+func (g *Generator) sysGen(s *core.System, e *Entry) error {
+	var pathBuffer bytes.Buffer
+	err := e.Path.Execute(&pathBuffer, s)
+	if err != nil {
+		return err
+	}
+	path := pathBuffer.String()
+
+	if e.Template != nil {
+		wr, err := os.Create(path)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			_ = wr.Close()
+		}()
+		return e.Template.Execute(wr, s)
+	}
+	err = os.MkdirAll(path, 0755)
+	if err != nil {
+		return err
+	}
+	for _, c := range e.Children {
+		if err := g.sysGen(s, c); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (g *Generator) Visit(m *core.Module) error {
 	for _, e := range g.entries {
 		if err := g.gen(m, e); err != nil {
 			return err
@@ -132,13 +167,36 @@ func (g *generator) Visit(m *core.Module) error {
 	return nil
 }
 
-func Generator(parent string) core.Visitor {
+func (g *Generator) Init(s *core.System) error {
+	par, err := sysTemplates.ReadDir(".")
+	if err != nil {
+		return err
+	}
+	entries, err := sysTemplates.ReadDir(par[0].Name())
+	if err != nil {
+		return err
+	}
+	sysEntries := make([]*Entry, 0)
+	for _, entry := range entries {
+		sysEntries = append(sysEntries, g.load(par[0].Name(), par[0].Name(), sysTemplates, entry))
+	}
+	for _, e := range sysEntries {
+		if err := g.sysGen(s, e); err != nil {
+			return err
+		}
+	}
+	cmd := exec.Command("npm", "install")
+	cmd.Dir = filepath.Join(g.parent)
+	return nil
+}
+
+func New(parent string) *Generator {
 	par, err := templates.ReadDir(".")
 	if err != nil {
 		panic(err)
 	}
 
-	g := &generator{
+	g := &Generator{
 		entries: make([]*Entry, 0),
 		seen:    make(map[fs.DirEntry]bool),
 		fs:      templates,
@@ -153,7 +211,7 @@ func Generator(parent string) core.Visitor {
 		panic(err)
 	}
 	for _, entry := range entries {
-		g.entries = append(g.entries, g.load(g.tplDir, entry))
+		g.entries = append(g.entries, g.load(g.tplDir, g.tplDir, templates, entry))
 	}
 	return g
 }

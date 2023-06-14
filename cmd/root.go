@@ -5,7 +5,6 @@ Copyright © 2023 Jonathan Taylor jonrtaylor12@gmail.com
 package cmd
 
 import (
-	"github.com/jt05610/scaf/actions"
 	"github.com/jt05610/scaf/context"
 	"os"
 
@@ -13,7 +12,6 @@ import (
 )
 
 var cfgFile string
-var hndl *actions.Handler
 var ctx context.Context
 var parDir string
 
@@ -38,7 +36,6 @@ For example, with scaf, you can:
 }
 
 func Execute() {
-	hndl = actions.YamlHandler(ctx)
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)

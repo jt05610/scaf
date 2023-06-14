@@ -1,7 +1,0 @@
-test.bot {
-    reverse_proxy * localhost:3000
-}
-
-api.test.bot {
-    reverse_proxy /blinky/* localhost:8000
-}
