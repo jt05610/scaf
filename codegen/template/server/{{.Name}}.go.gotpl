@@ -3,8 +3,7 @@
 // Date: {{.Date}}
 
 package server
-
-{{- $pkgName := .Name}}
+{{$pkgName := .Name}}
 import (
 	"context"
 	"fmt"
@@ -43,9 +42,7 @@ func (h *{{pascal $pkgName}}Server) List(_ context.Context, _ *{{$pkgName}}.Empt
 	    {{pluralize (pascal .Name)}}: h.{{pluralize (lower .Name)}},
     }, nil
 }
-
-{{- end}}
-
+{{ end}}
 {{- range .Funcs}}
 func (h *{{pascal $pkgName}}Server) {{.Name}}(_ context.Context, req *{{$pkgName}}.{{.Name}}Input) (
 	*{{$pkgName}}.{{.Name}}Payload, error) {
@@ -54,9 +51,7 @@ func (h *{{pascal $pkgName}}Server) {{.Name}}(_ context.Context, req *{{$pkgName
 
 	return &{{lower $pkgName}}.{{.Name}}Payload{Message: "implement me please"}, nil
 }
-
-{{- end}}
-
+{{end}}
 func Service() {{.Name}}.{{pascal .Name}}Server {
 	return &{{pascal .Name}}Server{
 		chores: make([]*{{.Name}}.Chore, 0),
