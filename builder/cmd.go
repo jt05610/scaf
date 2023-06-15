@@ -5,20 +5,28 @@ import (
 	"os/exec"
 )
 
-func GoModInit(m *core.Module) *exec.Cmd {
-	cmd := exec.Command("go", "mod", "init", m.Name)
-	cmd.Dir = m.Name
-	return cmd
+type Cmd struct {
+	init  []func(m *core.Module) *exec.Cmd
+	start []func(m *core.Module) *exec.Cmd
+	stop  []func(m *core.Module) *exec.Cmd
 }
 
-func GoModTidy(m *core.Module) *exec.Cmd {
-	cmd := exec.Command("go", "mod", "tidy")
-	cmd.Dir = m.Name
-	return cmd
+func (c *Cmd) Init() []func(m *core.Module) *exec.Cmd {
+	return c.init
 }
 
-func GoFmt(m *core.Module) *exec.Cmd {
-	cmd := exec.Command("go", "fmt", "./...")
-	cmd.Dir = m.Name
-	return cmd
+func (c *Cmd) Start() []func(m *core.Module) *exec.Cmd {
+	return c.start
+}
+
+func (c *Cmd) Stop() []func(m *core.Module) *exec.Cmd {
+	return c.stop
+}
+
+func NewCmd(parent, init, start, stop string) *Cmd {
+	return &Cmd{
+		init:  CmdFuncs(parent, init),
+		start: CmdFuncs(parent, start),
+		stop:  CmdFuncs(parent, stop),
+	}
 }

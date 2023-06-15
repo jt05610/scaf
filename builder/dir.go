@@ -66,7 +66,7 @@ func (d *dirBuilder) buildDir(parent string, m *core.Module, dir *Dir) error {
 	return nil
 }
 
-func (d *dirBuilder) Visit(m *core.Module) error {
+func (d *dirBuilder) VisitModule(m *core.Module) error {
 	path := filepath.Join(d.parent, m.Name)
 	for _, dir := range d.dirs {
 		if err := d.buildDir(path, m, dir); err != nil {
@@ -74,8 +74,4 @@ func (d *dirBuilder) Visit(m *core.Module) error {
 		}
 	}
 	return nil
-}
-
-func NewDirBuilder(dirs ...*Dir) core.Visitor {
-	return &dirBuilder{dirs: dirs, seen: make(map[*Dir]bool)}
 }

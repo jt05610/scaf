@@ -7,6 +7,15 @@ type Builder struct {
 	seen     map[string]bool
 }
 
+func (b *Builder) VisitSystem(s *core.System) error {
+	for _, v := range b.Visitors {
+		if err := v.VisitSystem(s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func markFieldList(fl core.FieldList) {
 	for i, f := range fl {
 		f.Last = i == len(fl)-1
@@ -31,23 +40,20 @@ func markModule(m *core.Module) {
 	}
 }
 
-func (b *Builder) Visit(module *core.Module) error {
+func (b *Builder) VisitModule(module *core.Module) error {
 	if _, seen := b.seen[module.Name]; seen {
 		return nil
 	}
 	b.seen[module.Name] = true
 	markModule(module)
 	for _, v := range b.Visitors {
-		if err := v.Visit(module); err != nil {
+		if err := v.VisitModule(module); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func NewBuilder(visitors ...core.Visitor) *Builder {
-	v := make([]core.Visitor, 1)
-	v[0] = core.NewChecker()
-	v = append(v, visitors...)
-	return &Builder{Visitors: v, seen: make(map[string]bool)}
+func NewBuilder(visitors ...core.Visitor) core.Visitor {
+	return &Builder{Visitors: visitors, seen: make(map[string]bool)}
 }

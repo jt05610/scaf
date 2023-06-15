@@ -13,7 +13,7 @@ message Empty {}
 message {{pascal .Name}} {
 	int64 id = 1;
     {{- range $index, $elem := .Fields}}
-    {{typeTrans "pb" $elem}} {{$elem.Name}} = {{add $index 2}};
+    {{typeTrans $elem}} {{$elem.Name}} = {{add $index 2}};
     {{- end}}
 }
 
@@ -23,7 +23,7 @@ message Get{{pascal .Name}}Input {
 
 message {{pascal .Name}}Input {
     {{- range $index, $elem := .Fields}}
-    {{typeTrans "pb" $elem}} {{$elem.Name}} = {{add $index 1}};
+    {{typeTrans $elem}} {{$elem.Name}} = {{add $index 1}};
     {{- end}}
 }
 
@@ -48,7 +48,7 @@ service {{pascal .Name}} {
 message {{pascal .Name}}Input {
 	{{- if .Params}}
     {{- range $index, $elem := .Params}}
-    {{inputTrans "pb" $elem}} {{$elem.Name}} = {{add $index 1}};
+    {{inputTrans $elem}} {{$elem.Name}} = {{add $index 1}};
     {{- end}}
 	{{- end}}
 }
@@ -56,7 +56,7 @@ message {{pascal .Name}}Input {
 message {{pascal .Name}}Payload {
 	{{- if .Return}}
     {{- range $index, $elem := .Return}}
-    {{typeTrans "pb" $elem}} {{$elem.Name}} = {{add $index 1}};
+    {{typeTrans $elem}} {{$elem.Name}} = {{add $index 1}};
 	{{- end}}
 	{{- end}}
 }

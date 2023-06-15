@@ -17,14 +17,23 @@ type runner struct {
 	seen   map[string]bool
 }
 
-func (r *runner) Visit(m *core.Module) error {
+func (r *runner) VisitSystem(s *core.System) error {
+	r.seen = make(map[string]bool)
+	for _, m := range s.Modules {
+		if err := r.VisitModule(m); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *runner) VisitModule(m *core.Module) error {
 	if _, seen := r.seen[m.Name]; seen {
 		return nil
 	}
 	r.seen[m.Name] = true
 	for _, cf := range r.cfs {
 		cmd := cf(m)
-
 		var out bytes.Buffer
 		var stderr bytes.Buffer
 		cmd.Stdout = &out
@@ -44,7 +53,7 @@ func (r *runner) Visit(m *core.Module) error {
 	return nil
 }
 
-func makeCmds(parent, cc string) []func(m *core.Module) *exec.Cmd {
+func CmdFuncs(parent, cc string) []func(m *core.Module) *exec.Cmd {
 	lines := strings.Split(cc, "\n")
 	cmds := make([]func(m *core.Module) *exec.Cmd, 0)
 	for _, c := range lines {
@@ -75,6 +84,6 @@ func makeCmds(parent, cc string) []func(m *core.Module) *exec.Cmd {
 	return cmds
 }
 
-func NewRunner(parent, lines string) core.Visitor {
-	return &runner{cfs: makeCmds(parent, lines), seen: make(map[string]bool)}
+func NewRunner(parent string, cfs []func(m *core.Module) *exec.Cmd) core.Visitor {
+	return &runner{cfs: cfs, parent: parent, seen: make(map[string]bool)}
 }

@@ -5,20 +5,21 @@ type Checker struct {
 	k    int
 }
 
-func (c *Checker) Visit(m *Module) error {
+func (c *Checker) VisitModule(m *Module) error {
 	if _, seen := c.seen[m.Name]; seen {
 		return nil
 	}
 	c.k++
 	c.seen[m.Name] = c.k
 	for _, d := range m.Deps {
-		if err := c.Visit(d); err != nil {
+		if err := c.VisitModule(d); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
+var i = `
 func (c *Checker) IsAcyclic(s *System) bool {
 	c.seen = make(map[string]int)
 	_ = s.Walk(c)
@@ -32,6 +33,7 @@ func (c *Checker) IsAcyclic(s *System) bool {
 	}
 	return true
 }
+`
 
 func (c *Checker) PostOrder(name string) (int, bool) {
 	o, seen := c.seen[name]

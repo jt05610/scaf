@@ -1,7 +1,5 @@
 package core
 
-import "fmt"
-
 type BaseType string
 
 const (
@@ -11,28 +9,19 @@ const (
 	BoolType   BaseType = "bool"
 )
 
-type Language string
-
-const (
-	GQL        Language = "gql"
-	Protobuf   Language = "pb"
-	Go         Language = "go"
-	Python     Language = "python"
-	Fortran    Language = "fortran"
-	C          Language = "c"
-	Cpp        Language = "cpp"
-	Typescript Language = "typescript"
-	Clojure    Language = "clojure"
-	Rust       Language = "rust"
-)
-
 type Type struct {
 	Name      string
+	Plural    string
 	Fields    FieldList
 	Funcs     []*Func
 	isArray   bool
 	Query     bool
 	Subscribe bool
+}
+
+type Aggregate struct {
+	Type
+	Individual *Type
 }
 
 var Int = &Type{Name: "int"}
@@ -44,46 +33,18 @@ func Array(t *Type) *Type {
 	t.isArray = true
 	return t
 }
-
-func makeArray(l Language, s string) string {
-	switch l {
-	case GQL:
-		return fmt.Sprintf("[%s]", s)
-	case Protobuf:
-		return fmt.Sprintf("repeated %s", s)
-	case Go, Clojure:
-		return fmt.Sprintf("[]%s", s)
-	case Python:
-		return fmt.Sprintf("List[%s]", s)
-	case Fortran:
-		return fmt.Sprintf("type(%s), allocatable, dimension(:)", s)
-	case C:
-		return fmt.Sprintf("%s *", s)
-	case Cpp:
-		return fmt.Sprintf("std::vector<%s>", s)
-	case Typescript:
-		return fmt.Sprintf("%s[]", s)
-	case Rust:
-		return fmt.Sprintf("Vec<%s>", s)
-	default:
-		return s
-	}
-}
-
 func (t *Type) string(l Language, isInput bool) (ret string) {
-	if _, found := TypeMapping[l][BaseType(t.Name)]; found {
-		ret = TypeMapping[l][BaseType(t.Name)]
-	} else {
+	var found bool
+	if ret, found = l.MapType(BaseType(t.Name)); !found {
 		ret = t.Name
 		if isInput {
 			ret += "Input"
 		}
 	}
 	if t.isArray {
-		return makeArray(l, ret)
+		return l.MakeArray(ret)
 	}
-	return
-
+	return ret
 }
 
 func (t *Type) String(l Language) string {
@@ -94,37 +55,24 @@ func (t *Type) InputString(l Language) string {
 	return t.string(l, true)
 }
 
+var old = `
+
+func makeArray(l Language, s string) string {
+	switch l {
+	case Clojure:
+		return fmt.Sprintf("[]%s", s)
+	case C:
+		return fmt.Sprintf("%s *", s)
+	case Cpp:
+		return fmt.Sprintf("std::vector<%s>", s)
+	case Rust:
+		return fmt.Sprintf("Vec<%s>", s)
+	default:
+		return s
+	}
+}
+
 var TypeMapping = map[Language]map[BaseType]string{
-	GQL: {
-		IntType:    "Int",
-		FloatType:  "Float",
-		StringType: "String",
-		BoolType:   "Boolean",
-	},
-	Protobuf: {
-		IntType:    "int32",
-		FloatType:  "float",
-		StringType: "string",
-		BoolType:   "bool",
-	},
-	Go: {
-		IntType:    "int",
-		FloatType:  "float32",
-		StringType: "string",
-		BoolType:   "bool",
-	},
-	Python: {
-		IntType:    "int",
-		FloatType:  "float",
-		StringType: "str",
-		BoolType:   "bool",
-	},
-	Fortran: {
-		IntType:    "INTEGER",
-		FloatType:  "REAL",
-		StringType: "CHARACTER",
-		BoolType:   "LOGICAL",
-	},
 	C: {
 		IntType:    "int",
 		FloatType:  "float",
@@ -136,12 +84,6 @@ var TypeMapping = map[Language]map[BaseType]string{
 		FloatType:  "float",
 		StringType: "std::string",
 		BoolType:   "bool",
-	},
-	Typescript: {
-		IntType:    "number",
-		FloatType:  "number",
-		StringType: "string",
-		BoolType:   "boolean",
 	},
 	Clojure: {
 		IntType:    "integer",
@@ -156,6 +98,7 @@ var TypeMapping = map[Language]map[BaseType]string{
 		BoolType:   "bool",
 	},
 }
+`
 
 type Field struct {
 	Name string

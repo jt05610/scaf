@@ -24,7 +24,7 @@ func TestDirBuilder(t *testing.T) {
 	})
 	builder := NewDirBuilder(dir).(*dirBuilder)
 	builder.parent = "testParent"
-	err := builder.Visit(&core.Module{Name: "testModule"})
+	err := builder.VisitModule(&core.Module{Name: "testModule"})
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
@@ -56,7 +56,7 @@ func TestDirBuilderWithCircularDependency(t *testing.T) {
 
 	builder := NewDirBuilder(dir1).(*dirBuilder)
 	builder.parent = "testParent"
-	err := builder.Visit(&core.Module{Name: "testModule"})
+	err := builder.VisitModule(&core.Module{Name: "testModule"})
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}

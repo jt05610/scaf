@@ -1,5 +1,6 @@
 package core
 
 type Visitor interface {
-	Visit(m *Module) error
+	VisitSystem(s *System) error
+	VisitModule(m *Module) error
 }

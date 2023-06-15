@@ -6,7 +6,7 @@ import (
 )
 
 func TestHost(t *testing.T) {
-	out := "testing/actual/host"
+	out := "testData/actual/host"
 	host := &solidjs.Host{
 		Port: 3000,
 		Remotes: []*solidjs.Remote{
