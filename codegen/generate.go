@@ -91,7 +91,7 @@ func (g *Generator) VisitSystem(ctx context.Context, s *core.System) error {
 	return nil
 }
 
-func New(parent string, lang core.Language) *Generator {
+func New(parent string, lang *core.Language) *Generator {
 	loader := core.NewLoader(parent, lang)
 	return &Generator{loader: loader}
 }

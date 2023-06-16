@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func HouseworkSystem(name string, backend core.Language) *core.System {
+func HouseworkSystem(name string, backend *core.Language) *core.System {
 	choreType := &core.Type{
 		Name: "Chore",
 		Fields: []*core.Field{
@@ -61,7 +61,7 @@ func HouseworkSystem(name string, backend core.Language) *core.System {
 	return s
 }
 
-func RunTest(t *testing.T, parent string, backend core.Language, f func(system *core.System) error) {
+func RunTest(t *testing.T, parent string, backend *core.Language, f func(system *core.System) error) {
 	s := HouseworkSystem(parent, backend)
 	err := f(s)
 	if err != nil {

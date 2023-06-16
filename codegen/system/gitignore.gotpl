@@ -1,2 +1,0 @@
-{{- range .Modules }}{{lower .Name}}/cmd/.secrets
-{{- end }}

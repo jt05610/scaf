@@ -11,7 +11,7 @@ import (
 	"text/template"
 )
 
-func funcMap(l Language) template.FuncMap {
+func funcMap(l *Language) template.FuncMap {
 	return template.FuncMap{
 		"add": func(i, j int) int {
 			return i + j
@@ -36,7 +36,7 @@ type Entry struct {
 }
 
 type TemplateLoader struct {
-	lang    Language
+	lang    *Language
 	entries map[string]*Entry
 	seen    map[string]bool
 	fs      *embed.FS
@@ -46,11 +46,13 @@ type TemplateLoader struct {
 
 func (l *TemplateLoader) pathName(path string) *template.Template {
 	fn := strings.TrimSuffix(path, ".gotpl")
-	if strings.Contains(path, "template/module") {
-		fn = strings.ReplaceAll(fn, "template/module", "{{.Name}}")
+	modPath := filepath.Join(l.tplDir, "module")
+	sysPath := filepath.Join(l.tplDir, "system")
+	if strings.Contains(path, modPath) {
+		fn = strings.ReplaceAll(fn, modPath, "{{.Name}}")
 		fn = filepath.Join(l.parent, fn)
-	} else if strings.Contains(path, "template/system") {
-		fn = strings.ReplaceAll(fn, "template/system", l.parent)
+	} else if strings.Contains(path, sysPath) {
+		fn = strings.ReplaceAll(fn, sysPath, l.parent)
 	}
 	return template.Must(template.New(path).Funcs(funcMap(l.lang)).Parse(fn))
 }
@@ -110,7 +112,7 @@ func (l *TemplateLoader) Load() error {
 	if err != nil {
 		return err
 	}
-	l.tplDir = par[0].Name()
+	l.tplDir = filepath.Join(par[0].Name(), l.lang.Name)
 	content, err := l.fs.ReadDir(l.tplDir)
 	if err != nil {
 		return err
@@ -120,7 +122,7 @@ func (l *TemplateLoader) Load() error {
 		if err != nil {
 			return err
 		}
-		l.entries[strings.TrimPrefix(ff.Name(), "template/")] = e
+		l.entries[strings.TrimPrefix(ff.Name(), filepath.Join("template", l.lang.Name))] = e
 	}
 	return nil
 }
@@ -137,7 +139,7 @@ func (l *TemplateLoader) System() []*Entry {
 	return e.Children
 }
 
-func NewLoader(parent string, lang Language) *TemplateLoader {
+func NewLoader(parent string, lang *Language) *TemplateLoader {
 	return &TemplateLoader{
 		entries: make(map[string]*Entry, 0),
 		seen:    make(map[string]bool),

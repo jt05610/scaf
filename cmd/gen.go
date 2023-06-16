@@ -11,7 +11,6 @@ import (
 	"github.com/jt05610/scaf/context"
 	"github.com/jt05610/scaf/core"
 	_go "github.com/jt05610/scaf/go"
-	"github.com/jt05610/scaf/gql"
 	"github.com/jt05610/scaf/proto"
 	"github.com/jt05610/scaf/ts"
 	"github.com/jt05610/scaf/yaml"
@@ -25,7 +24,7 @@ var sysConfig string
 func Gen(ctx context.Context, parent string, s *core.System) {
 	ctx.Logger.Info("generating system", uz.String("name", s.Name))
 	goLang := _go.Lang(parent)
-	GQL := gql.Lang(parent)
+	GQL := codegen.Lang(parent)
 	protoBuf := proto.Lang(parent)
 	typescript := ts.Lang(parent)
 	bld := builder.NewBuilder(

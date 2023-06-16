@@ -34,7 +34,7 @@ func Array(t *Type) *Type {
 	t.isArray = true
 	return t
 }
-func (t *Type) string(l Language, isInput bool) (ret string) {
+func (t *Type) string(l *Language, isInput bool) (ret string) {
 	var found bool
 	if ret, found = l.MapType(BaseType(t.Name)); !found {
 		ret = t.Name
@@ -48,11 +48,11 @@ func (t *Type) string(l Language, isInput bool) (ret string) {
 	return ret
 }
 
-func (t *Type) String(l Language) string {
+func (t *Type) String(l *Language) string {
 	return t.string(l, false)
 }
 
-func (t *Type) InputString(l Language) string {
+func (t *Type) InputString(l *Language) string {
 	return t.string(l, true)
 }
 
@@ -108,11 +108,11 @@ type Field struct {
 	Last     bool
 }
 
-func (f *Field) TypeString(l Language) string {
+func (f *Field) TypeString(l *Language) string {
 	return f.Type.String(l)
 }
 
-func (f *Field) InputString(l Language) string {
+func (f *Field) InputString(l *Language) string {
 	return f.Type.InputString(l)
 }
 
@@ -128,7 +128,7 @@ type API struct {
 	PortMap  *PortMap  `yaml:"-"`
 	Author   string    `yaml:"author"`
 	Version  int       `yaml:"version"`
-	Language Language  `yaml:"language"`
+	Language *Language `yaml:"language"`
 	Date     string    `yaml:"date"`
 	Deps     []*Module `yaml:"deps"`
 	Types    []*Type   `yaml:"types"`
@@ -155,7 +155,7 @@ type Module struct {
 	API     map[string]*API
 }
 
-func NewModule(name, author, date string, lang Language) *Module {
+func NewModule(name, author, date string, lang *Language) *Module {
 	return &Module{
 		MetaData: &MetaData{
 			Name:   name,
