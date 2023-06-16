@@ -10,7 +10,31 @@ import (
 	"time"
 )
 
-func newLogger(ctx context.Context, parDir, name string, l zapcore.Level) *zap.Logger {
+type Logger struct {
+	z *zap.Logger
+}
+
+func (l *Logger) Debug(msg string, fields ...zap.Field) {
+	l.z.Debug(msg, fields...)
+}
+
+func (l *Logger) Info(msg string, fields ...zap.Field) {
+	l.z.Info(msg, fields...)
+}
+
+func (l *Logger) Warn(msg string, fields ...zap.Field) {
+	l.z.Warn(msg, fields...)
+}
+
+func (l *Logger) Error(msg string, fields ...zap.Field) {
+	l.z.Error(msg, fields...)
+}
+
+func (l *Logger) Fatal(msg string, fields ...zap.Field) {
+	l.z.Fatal(msg, fields...)
+}
+
+func newLogger(ctx context.Context, parDir, name string, l zapcore.Level) *Logger {
 	par := filepath.Join(parDir, "logs")
 	err := os.MkdirAll(par, 0755)
 	if err != nil && !os.IsExist(err) {
@@ -53,10 +77,10 @@ func newLogger(ctx context.Context, parDir, name string, l zapcore.Level) *zap.L
 			panic(err)
 		}
 	}()
-	return z
+	return &Logger{z: z}
 }
 
-func newSampler(ctx context.Context, name string, l zapcore.Level, freq time.Duration, initial, skip int) *zap.Logger {
+func newSampler(ctx context.Context, name string, l zapcore.Level, freq time.Duration, initial, skip int) *Logger {
 	z := zap.New(
 		zapcore.NewSamplerWithOptions(
 			zapcore.NewCore(
@@ -96,25 +120,25 @@ func newSampler(ctx context.Context, name string, l zapcore.Level, freq time.Dur
 			panic(err)
 		}
 	}()
-	return z
+	return &Logger{z: z}
 }
 
-func NewProd(ctx context.Context, parDir, name string) *zap.Logger {
+func NewProd(ctx context.Context, parDir, name string) *Logger {
 	l := newLogger(ctx, parDir, name, zapcore.InfoLevel)
 	return l
 }
 
-func NewDev(ctx context.Context, parDir, name string) *zap.Logger {
+func NewDev(ctx context.Context, parDir, name string) *Logger {
 	l := newLogger(ctx, parDir, name, zapcore.DebugLevel)
 	return l
 }
 
-func NewProdSampling(ctx context.Context, name string, freq time.Duration, initial, skip int) *zap.Logger {
+func NewProdSampling(ctx context.Context, name string, freq time.Duration, initial, skip int) *Logger {
 	l := newSampler(ctx, name, zapcore.InfoLevel, freq, initial, skip)
 	return l
 }
 
-func NewDevSampling(ctx context.Context, name string, freq time.Duration, initial, skip int) *zap.Logger {
+func NewDevSampling(ctx context.Context, name string, freq time.Duration, initial, skip int) *Logger {
 	l := newSampler(ctx, name, zapcore.DebugLevel, freq, initial, skip)
 	return l
 }

@@ -11,7 +11,7 @@ type Cmd struct {
 	stop  []func(m *core.Module) *exec.Cmd
 }
 
-func (c *Cmd) Init() []func(m *core.Module) *exec.Cmd {
+func (c *Cmd) Gen() []func(m *core.Module) *exec.Cmd {
 	return c.init
 }
 

@@ -3,7 +3,7 @@
   "scripts": {
     "compile": "tsc",
     "start": "npm run compile && node ./dist/index.js"
-  }
+  },
   "dependencies": {
     "@apollo/gateway": "^2.4.7",
     "@apollo/server": "^4.7.3",

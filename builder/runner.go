@@ -2,8 +2,9 @@ package builder
 
 import (
 	"bytes"
-	"fmt"
+	"github.com/jt05610/scaf/context"
 	"github.com/jt05610/scaf/core"
+	"go.uber.org/zap"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,17 +18,18 @@ type runner struct {
 	seen   map[string]bool
 }
 
-func (r *runner) VisitSystem(s *core.System) error {
+func (r *runner) VisitSystem(ctx context.Context, s *core.System) error {
+	ctx.Logger.Debug("Running commands", zap.String("system", s.Name))
 	r.seen = make(map[string]bool)
 	for _, m := range s.Modules {
-		if err := r.VisitModule(m); err != nil {
+		if err := r.VisitModule(ctx, m); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (r *runner) VisitModule(m *core.Module) error {
+func (r *runner) VisitModule(ctx context.Context, m *core.Module) error {
 	if _, seen := r.seen[m.Name]; seen {
 		return nil
 	}
@@ -40,14 +42,10 @@ func (r *runner) VisitModule(m *core.Module) error {
 		cmd.Stderr = &stderr
 
 		err := cmd.Run()
-		fmt.Printf("%s\n", cmd.String())
+		ctx.Logger.Info(cmd.String(), zap.String("output", out.String()))
 		if err != nil {
-			fmt.Println(stderr.String())
+			ctx.Logger.Error(cmd.String(), zap.String("stderr", stderr.String()), zap.Error(err))
 			return err
-		} else {
-			if out.String() != "" {
-				fmt.Println(out.String())
-			}
 		}
 	}
 	return nil

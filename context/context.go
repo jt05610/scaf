@@ -2,7 +2,7 @@ package context
 
 import (
 	"context"
-	"go.uber.org/zap"
+	"github.com/jt05610/scaf/zap"
 )
 
 type Context struct {

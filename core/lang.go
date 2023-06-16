@@ -9,7 +9,7 @@ type Language interface {
 	FS() *embed.FS
 	MapType(t BaseType) (string, bool)
 	MakeArray(s string) string
-	Init() []func(*Module) *exec.Cmd
+	Gen() []func(*Module) *exec.Cmd
 	Start() []func(*Module) *exec.Cmd
 	Stop() []func(*Module) *exec.Cmd
 }

@@ -6,13 +6,14 @@ package cmd
 
 import (
 	"github.com/jt05610/scaf/context"
+	"github.com/jt05610/scaf/zap"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
 var cfgFile string
-var ctx context.Context
+var debug bool
 var parDir string
 
 // rootCmd represents the base command when called without any subcommands
@@ -37,6 +38,7 @@ For example, with scaf, you can:
 
 func Execute() {
 	err := rootCmd.Execute()
+
 	if err != nil {
 		os.Exit(1)
 	}
@@ -45,4 +47,15 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "$HOME/.scaf.yaml", "config file (default is $HOME/.scaf.yaml)")
 	rootCmd.PersistentFlags().StringVarP(&parDir, "parent", "p", ".", "parent directory for system")
+	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", true, "verbose output")
+}
+
+func Ctx(call string) context.Context {
+	var log *zap.Logger
+	if debug {
+		log = zap.NewDev(context.Background(), parDir, call)
+	} else {
+		log = zap.NewProd(context.Background(), parDir, call)
+	}
+	return context.NewContext(log)
 }

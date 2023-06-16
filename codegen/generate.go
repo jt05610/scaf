@@ -2,7 +2,9 @@ package codegen
 
 import (
 	"bytes"
+	"github.com/jt05610/scaf/context"
 	"github.com/jt05610/scaf/core"
+	"go.uber.org/zap"
 	"os"
 	"strings"
 )
@@ -48,27 +50,33 @@ func (g *Generator) gen(item interface{}, e *core.Entry) error {
 	return nil
 }
 
-func (g *Generator) VisitModule(m *core.Module) error {
+func (g *Generator) VisitModule(ctx context.Context, m *core.Module) error {
+	ctx.Logger.Debug("Generating", zap.String("module", m.Name))
 	for _, e := range g.loader.Module() {
+		ctx.Logger.Debug("Generating", zap.String("template", e.Path.Name()))
 		if err := g.gen(m, e); err != nil {
+			ctx.Logger.Error("Error generating", zap.String("template", e.Path.Name()), zap.Error(err))
 			return err
 		}
 	}
 	return nil
 }
 
-func (g *Generator) VisitSystem(s *core.System) error {
+func (g *Generator) VisitSystem(ctx context.Context, s *core.System) error {
+	ctx.Logger.Debug("Generating", zap.String("system", s.Name))
 	err := g.loader.Load()
 	if err != nil {
 		return err
 	}
 	for _, e := range g.loader.System() {
 		if err := g.gen(s, e); err != nil {
+			ctx.Logger.Error("Error generating", zap.String("template", e.Path.Name()), zap.Error(err))
 			return err
 		}
 	}
 	for _, m := range s.Modules {
-		if err := g.VisitModule(m); err != nil {
+		ctx.Logger.Debug("Generating", zap.String("module", m.Name))
+		if err := g.VisitModule(ctx, m); err != nil {
 			return err
 		}
 	}

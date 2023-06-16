@@ -1,19 +1,10 @@
 package core
 
 type System struct {
-	Name    string
-	GQLPort int
-	Author  string
-	Date    string
-	Modules []*Module
-}
-
-func (s *System) Walk(v Visitor) error {
-	for _, m := range s.Modules {
-		err := v.VisitModule(m)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	Name    string    `yaml:"name"`
+	UIPort  int       `yaml:"ui_port"`
+	GQLPort int       `yaml:"gql_port"`
+	Author  string    `yaml:"author"`
+	Date    string    `yaml:"date"`
+	Modules []*Module `yaml:"modules"`
 }
