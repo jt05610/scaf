@@ -11,11 +11,14 @@ func (c *Checker) VisitModule(m *Module) error {
 	}
 	c.k++
 	c.seen[m.Name] = c.k
-	for _, d := range m.Deps {
-		if err := c.VisitModule(d); err != nil {
-			return err
+	for _, api := range m.API {
+		for _, d := range api.Deps {
+			if err := c.VisitModule(d); err != nil {
+				return err
+			}
 		}
 	}
+
 	return nil
 }
 

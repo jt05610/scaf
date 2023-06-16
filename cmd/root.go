@@ -6,8 +6,13 @@ package cmd
 
 import (
 	"github.com/jt05610/scaf/context"
+	"github.com/jt05610/scaf/core"
+	"github.com/jt05610/scaf/yaml"
 	"github.com/jt05610/scaf/zap"
+	uz "go.uber.org/zap"
 	"os"
+	"os/user"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -47,15 +52,50 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "$HOME/.scaf.yaml", "config file (default is $HOME/.scaf.yaml)")
 	rootCmd.PersistentFlags().StringVarP(&parDir, "parent", "p", ".", "parent directory for system")
-	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", true, "verbose output")
+	rootCmd.PersistentFlags().BoolVarP(&debug, "verbose", "v", false, "verbose output")
 }
 
-func Ctx(call string) context.Context {
+func Ctx(parent string, call string) context.Context {
 	var log *zap.Logger
 	if debug {
-		log = zap.NewDev(context.Background(), parDir, call)
+		log = zap.NewDev(context.Background(), parent, call)
 	} else {
-		log = zap.NewProd(context.Background(), parDir, call)
+		log = zap.NewProd(context.Background(), parent, call)
 	}
 	return context.NewContext(log)
+}
+
+func DefaultAuthor(ctx context.Context) string {
+	u, err := user.Current()
+	if err != nil {
+		ctx.Logger.Error("failed to get current user", uz.Error(err))
+	}
+	return u.Name
+}
+
+func LoadSystem() (*core.System, error) {
+	path := filepath.Join(parDir, "system.yaml")
+	fp, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = fp.Close()
+	}()
+	srv := yaml.NewYAMLService[*core.System]()
+	return srv.Load(fp)
+}
+
+func SaveSystem(s *core.System) error {
+	path := filepath.Join(parDir, "system.yaml")
+	fp, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	srv := yaml.NewYAMLService[*core.System]()
+	err = srv.Flush(fp, s)
+	if err != nil {
+		return err
+	}
+	return fp.Close()
 }

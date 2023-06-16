@@ -72,6 +72,6 @@ to quickly create a Cobra application.`,
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
-	serveCmd.Flags().StringVarP(&addr, "addr", "a", ":{{.Port}}", "address to listen on")
-	serveCmd.Flags().IntVarP(&port, "port", "p", {{.Port}}, "port to listen on")
+	serveCmd.Flags().StringVarP(&addr, "addr", "a", ":{{.PortMap.GQL}}", "address to listen on")
+	serveCmd.Flags().IntVarP(&port, "port", "p", {{.PortMap.GQL}}, "port to listen on")
 }

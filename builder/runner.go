@@ -34,20 +34,24 @@ func (r *runner) VisitModule(ctx context.Context, m *core.Module) error {
 		return nil
 	}
 	r.seen[m.Name] = true
-	for _, cf := range r.cfs {
-		cmd := cf(m)
-		var out bytes.Buffer
-		var stderr bytes.Buffer
-		cmd.Stdout = &out
-		cmd.Stderr = &stderr
+	for _, api := range m.API {
+		for _, cf := range r.cfs {
+			m.Version = api.Version
+			cmd := cf(m)
+			var out bytes.Buffer
+			var stderr bytes.Buffer
+			cmd.Stdout = &out
+			cmd.Stderr = &stderr
 
-		err := cmd.Run()
-		ctx.Logger.Info(cmd.String(), zap.String("output", out.String()))
-		if err != nil {
-			ctx.Logger.Error(cmd.String(), zap.String("stderr", stderr.String()), zap.Error(err))
-			return err
+			err := cmd.Run()
+			ctx.Logger.Info(cmd.String(), zap.String("output", out.String()))
+			if err != nil {
+				ctx.Logger.Error(cmd.String(), zap.String("stderr", stderr.String()), zap.Error(err))
+				return err
+			}
 		}
 	}
+
 	return nil
 }
 
@@ -58,7 +62,7 @@ func CmdFuncs(parent, cc string) []func(m *core.Module) *exec.Cmd {
 		if c == "" {
 			continue
 		}
-		t := template.Must(template.New("cmd").Parse(c))
+		t := template.Must(template.New(c).Parse(c))
 
 		if len(strings.Split(c, " ")) > 0 {
 			cmds = append(cmds, func(m *core.Module) *exec.Cmd {

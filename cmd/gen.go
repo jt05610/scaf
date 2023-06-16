@@ -55,7 +55,7 @@ var genCmd = &cobra.Command{
 			fmt.Println("Please provide a system configuration file or run `scaf init` to create one.")
 			return
 		}
-		ctx := Ctx("gen")
+		ctx := Ctx(parDir, "gen")
 		df, err := os.Open(sysConfig)
 		if err != nil {
 			ctx.Logger.Error("", uz.Error(err))

@@ -10,8 +10,8 @@ import (
 var templates embed.FS
 
 var initCmd = `
-go install google.golang.org/protobuf/cmd/protoc-gen-go@v{{.Version}}.28
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v{{.Version}}.2
+go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. v{{.Version}}/{{.Name}}.proto
 `
 

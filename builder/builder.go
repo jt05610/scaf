@@ -37,11 +37,13 @@ func markFunc(f *core.Func) {
 }
 
 func markModule(m *core.Module) {
-	for _, t := range m.Types {
-		markType(t)
-	}
-	for _, f := range m.Funcs {
-		markFunc(f)
+	for _, api := range m.API {
+		for _, t := range api.Types {
+			markType(t)
+		}
+		for _, f := range api.Funcs {
+			markFunc(f)
+		}
 	}
 }
 

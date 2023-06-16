@@ -52,12 +52,20 @@ func (g *Generator) gen(item interface{}, e *core.Entry) error {
 
 func (g *Generator) VisitModule(ctx context.Context, m *core.Module) error {
 	ctx.Logger.Debug("Generating", zap.String("module", m.Name))
-	for _, e := range g.loader.Module() {
-		ctx.Logger.Debug("Generating", zap.String("template", e.Path.Name()))
-		if err := g.gen(m, e); err != nil {
-			ctx.Logger.Error("Error generating", zap.String("template", e.Path.Name()), zap.Error(err))
-			return err
+	for v, api := range m.API {
+		m.Version = api.Version
+		api.PortMap = m.PortMap
+		ctx.Logger.Debug("Generating", zap.String("api", v))
+		for _, e := range g.loader.Module() {
+			ctx.Logger.Debug("Generating", zap.String("template", e.Path.Name()))
+			if err := g.gen(api, e); err != nil {
+				ctx.Logger.Error("Error generating", zap.String("template", e.Path.Name()), zap.Error(err))
+				return err
+			}
+			ctx.Logger.Debug("Generated", zap.String("template", e.Path.Name()))
 		}
+		ctx.Logger.Debug("Generated", zap.String("api", v))
+		api.PortMap = nil
 	}
 	return nil
 }

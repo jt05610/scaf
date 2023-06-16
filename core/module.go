@@ -16,6 +16,7 @@ type Type struct {
 	Funcs     []*Func
 	isArray   bool
 	Query     bool
+	Mutate    bool
 	Subscribe bool
 }
 
@@ -101,9 +102,10 @@ var TypeMapping = map[Language]map[BaseType]string{
 `
 
 type Field struct {
-	Name string
-	Type *Type
-	Last bool
+	Name     string
+	Required bool
+	Type     *Type
+	Last     bool
 }
 
 func (f *Field) TypeString(l Language) string {
@@ -121,14 +123,59 @@ type Func struct {
 	Params FieldList
 }
 
+type API struct {
+	Name     string    `yaml:"name"`
+	PortMap  *PortMap  `yaml:"-"`
+	Author   string    `yaml:"author"`
+	Version  int       `yaml:"version"`
+	Language Language  `yaml:"language"`
+	Date     string    `yaml:"date"`
+	Deps     []*Module `yaml:"deps"`
+	Types    []*Type   `yaml:"types"`
+	Funcs    []*Func   `yaml:"funcs"`
+}
+
+type PortMap struct {
+	UI  int
+	GQL int
+	RPC int
+}
+
+func (p *PortMap) Add(n int) *PortMap {
+	return &PortMap{
+		UI:  p.UI + n,
+		GQL: p.GQL + n,
+		RPC: p.RPC + n,
+	}
+}
+
 type Module struct {
-	Name     string
-	Author   string
-	Version  int
-	Date     string
-	Port     int
-	Language Language
-	Deps     []*Module
-	Types    []*Type
-	Funcs    []*Func
+	*MetaData
+	Version int
+	API     map[string]*API
+}
+
+func NewModule(name, author, date string, lang Language) *Module {
+	return &Module{
+		MetaData: &MetaData{
+			Name:   name,
+			Author: author,
+			Date:   date,
+			PortMap: &PortMap{
+				UI:  UIPort,
+				GQL: GQLPort,
+				RPC: RPCPort,
+			},
+		},
+		API: map[string]*API{
+			"v1": {
+				Version:  1,
+				Language: lang,
+				Date:     date,
+				Deps:     make([]*Module, 0),
+				Types:    make([]*Type, 0),
+				Funcs:    make([]*Func, 0),
+			},
+		},
+	}
 }

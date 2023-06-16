@@ -9,7 +9,7 @@ import { ApolloGateway } from "@apollo/gateway";
 const gateway: ApolloGateway = new ApolloGateway({
     serviceList: [
         {{- range .Modules }}
-            { name: '{{lower .Name}}', url: 'https://localhost:{{.Port}}/query' },
+            { name: '{{lower .Name}}', url: 'https://localhost:{{.PortMap.GQL}}/query' },
         {{- end }}
     ],
 });
@@ -20,7 +20,7 @@ const server: ApolloServer = new ApolloServer({
 });
 
 const { url} = await startStandaloneServer(server, {
-    listen: {port: {{.GQLPort}}}
+    listen: {port: {{.PortMap.GQL}}}
 });
 
 server.listen().then(({ url }) => {

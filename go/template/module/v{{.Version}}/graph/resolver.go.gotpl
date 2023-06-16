@@ -26,7 +26,7 @@ func NewResolver(cert []byte) *Resolver{
 	}
 
 	conn, err := grpc.Dial(
-		"{{lower .Name}}.local",
+		"https://localhost:{{.PortMap.RPC}}",
 		grpc.WithTransportCredentials(
 			credentials.NewTLS(
 				&tls.Config{
