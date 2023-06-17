@@ -5,11 +5,15 @@ Copyright © 2023 Jonathan Taylor jonrtaylor12@gmail.com
 package cmd
 
 import (
+	"fmt"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jt05610/scaf/context"
 	"github.com/jt05610/scaf/core"
+	"github.com/jt05610/scaf/tui"
 	"github.com/jt05610/scaf/yaml"
 	"github.com/jt05610/scaf/zap"
 	uz "go.uber.org/zap"
+	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -20,6 +24,20 @@ import (
 var cfgFile string
 var debug bool
 var parDir string
+
+func FakeSystems(n int) []*core.System {
+	ret := make([]*core.System, n)
+	for i := 0; i < n; i++ {
+		ret[i] = &core.System{
+			MetaData: &core.MetaData{
+				Name:        fmt.Sprintf("System %d", i),
+				Description: "This is a fake system",
+			},
+		}
+
+	}
+	return ret
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -39,6 +57,13 @@ For example, with scaf, you can:
 - Download and organize your required modules automatically in a local directory, akin to Python's venv or Node's node_modules.
 
 `,
+	Run: func(cmd *cobra.Command, args []string) {
+		m := tui.NewTUI(FakeSystems(10))
+		p := tea.NewProgram(m)
+		if _, err := p.Run(); err != nil {
+			log.Fatal(err)
+		}
+	},
 }
 
 func Execute() {
