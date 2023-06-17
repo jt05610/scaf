@@ -12,7 +12,7 @@ import (
 )
 
 func funcMap(l *Language) template.FuncMap {
-	return template.FuncMap{
+	base := template.FuncMap{
 		"add": func(i, j int) int {
 			return i + j
 		},
@@ -27,6 +27,16 @@ func funcMap(l *Language) template.FuncMap {
 		"upper":     cases.Upper(language.Und).String,
 		"pascal":    cases.Title(language.Und).String,
 	}
+	base["service"] = func(api *API) string {
+		t, err := template.New("service").Funcs(base).Parse(api.Language.Service)
+		if err != nil {
+			panic(err)
+		}
+		var b strings.Builder
+		err = t.Execute(&b, api)
+		return b.String()
+	}
+	return base
 }
 
 type Entry struct {

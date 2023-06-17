@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"{{.Name}}/v1/graph"
+	"{{.Name}}/v{{.Version}}/graph"
 	"log"
 	"net/http"
 	"os"
@@ -21,16 +21,11 @@ import (
 var addr string
 var port int
 
-// serveCmd represents the serve command
-var serveCmd = &cobra.Command{
-	Use:   "serve",
+// relayCmd represents the serve command
+var relayCmd = &cobra.Command{
+	Use:   "relay",
 	Short: "Runs the graphql relay server",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Long: ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		cert, err := secrets.ReadFile(".secrets/{{.Name}}.local+3.pem")
 		if err != nil {
@@ -71,7 +66,7 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
-	rootCmd.AddCommand(serveCmd)
-	serveCmd.Flags().StringVarP(&addr, "addr", "a", ":{{.PortMap.GQL}}", "address to listen on")
-	serveCmd.Flags().IntVarP(&port, "port", "p", {{.PortMap.GQL}}, "port to listen on")
+	rootCmd.AddCommand(relayCmd)
+	relayCmd.Flags().StringVarP(&addr, "addr", "a", ":{{.PortMap.GQL}}", "address to listen on")
+	relayCmd.Flags().IntVarP(&port, "port", "p", {{.PortMap.GQL}}, "port to listen on")
 }

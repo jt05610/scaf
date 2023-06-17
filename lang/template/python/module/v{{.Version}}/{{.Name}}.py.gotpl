@@ -6,6 +6,9 @@ import grpc
 from concurrent import futures
 from threading import Lock
 
+{{- $pkg := .Name }}
+{{- $pascal := pascal .Name }}
+
 # Import the generated classes
 import {{.Name}}_pb2
 import {{.Name}}_pb2_grpc
@@ -19,14 +22,23 @@ class {{pascal .Name}}Server({{.Name}}_pb2_grpc.{{pascal .Name}}Servicer):
     def {{.Name}}(self, request, context):
         with self.mu:
             # Here you should implement your logic and return appropriate result.
-            return {{.Name}}_pb2.{{.Name}}Payload(message="implement me please")
+            return {{$pkg}}_pb2.{{.Name}}Payload(message="implement me please")
 {{end}}
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     {{.Name}}_pb2_grpc.add_{{pascal .Name}}Servicer_to_server({{pascal .Name}}Server(), server)
-    server.add_insecure_port('[::]:50051')
+
+    with open('cmd/.secrets/{{$pkg}}.local+3.pem', 'rb') as f:
+        certificate_chain = f.read()
+    with open('cmd/.secrets/{{$pkg}}.local+3-key.pem', 'rb') as f:
+        private_key = f.read()
+
+    credentials = grpc.ssl_server_credentials([(private_key, certificate_chain)])
+
+    server.add_secure_port('[::]:{{.PortMap.RPC}}', credentials)
     server.start()
+    print("🐍 Started {{.Name}} server on port {{.PortMap.RPC}}...")
     server.wait_for_termination()
 
 if __name__ == '__main__':

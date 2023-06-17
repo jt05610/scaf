@@ -36,6 +36,7 @@ func (m *TypeMap) Map(t BaseType) (string, bool) {
 
 type Language struct {
 	*Cmd     `yaml:"-"`
+	Service  string    `yaml:"service"`
 	Name     string    `yaml:"name"`
 	Scripts  *Scripts  `yaml:"scripts"`
 	fs       *embed.FS `yaml:"fs"`

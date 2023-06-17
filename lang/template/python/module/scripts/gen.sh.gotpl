@@ -1,0 +1,3 @@
+source venv/bin/activate
+python3.11 -m grpc_tools.protoc -I./v{{.Version}} --python_out=./v{{.Version}} --pyi_out=./v{{.Version}} --grpc_python_out=./v{{.Version}} v{{.Version}}/{{.Name}}.proto
+black . --line-length=79

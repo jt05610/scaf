@@ -32,6 +32,6 @@ func Protobuf(parent string) *core.Language {
 		protobufScripts,
 		&protobufTpl,
 		protobufTypes,
-		"type(%s), allocatable, dimension(:)",
+		"repeated %s",
 	)
 }

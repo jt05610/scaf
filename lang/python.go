@@ -15,19 +15,28 @@ var pyTypes = &core.TypeMap{
 	Bool:   "bool",
 }
 
+var shService = `
+	srvCmd := exec.Command("/bin/sh", "scripts/service.sh")
+
+	srvCmd.Stdout = os.Stdout
+	srvCmd.Stderr = os.Stderr
+
+	if err := srvCmd.Run(); err != nil {
+		log.Fatalf("cmd.Run() failed with %s\n", err)
+	}
+`
+
 var pyScripts = &core.Scripts{
 	Init: `
+sh scripts/init.sh
 `,
 	Gen: `
-`,
-	Start: `
-`,
-	Stop: `
+sh scripts/gen.sh
 `,
 }
 
 func Python(parent string) *core.Language {
-	return core.CreateLanguage(
+	l := core.CreateLanguage(
 		"python",
 		parent,
 		pyScripts,
@@ -35,4 +44,6 @@ func Python(parent string) *core.Language {
 		pyTypes,
 		"List[%s]",
 	)
+	l.Service = shService
+	return l
 }

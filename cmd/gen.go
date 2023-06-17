@@ -10,9 +10,7 @@ import (
 	"github.com/jt05610/scaf/codegen"
 	"github.com/jt05610/scaf/context"
 	"github.com/jt05610/scaf/core"
-	_go "github.com/jt05610/scaf/go"
-	"github.com/jt05610/scaf/proto"
-	"github.com/jt05610/scaf/ts"
+	"github.com/jt05610/scaf/lang"
 	"github.com/jt05610/scaf/yaml"
 	"github.com/spf13/cobra"
 	uz "go.uber.org/zap"
@@ -23,20 +21,30 @@ var sysConfig string
 
 func Gen(ctx context.Context, parent string, s *core.System) {
 	ctx.Logger.Info("generating system", uz.String("name", s.Name))
-	goLang := _go.Lang(parent)
-	GQL := codegen.Lang(parent)
-	protoBuf := proto.Lang(parent)
-	typescript := ts.Lang(parent)
+	goLang := lang.Go(parent)
+	gql := lang.GraphQL(parent)
+	proto := lang.Protobuf(parent)
+	python := lang.Python(parent)
+	ts := lang.TypeScript(parent)
+
 	bld := builder.NewBuilder(
 		codegen.New(parent, goLang),
-		codegen.New(parent, GQL),
-		codegen.New(parent, protoBuf),
-		codegen.New(parent, typescript),
-		builder.NewRunner(parent, protoBuf.Gen()),
+		codegen.New(parent, gql),
+		codegen.New(parent, proto),
+		codegen.New(parent, python),
+		codegen.New(parent, ts),
+		builder.NewRunner(parent, goLang.Init()),
+		builder.NewRunner(parent, proto.Init()),
+		builder.NewRunner(parent, gql.Init()),
+		builder.NewRunner(parent, ts.Init()),
+		builder.NewRunner(parent, python.Init()),
+		builder.NewRunner(parent, proto.Gen()),
 		builder.NewRunner(parent, goLang.Gen()),
-		builder.NewRunner(parent, GQL.Gen()),
-		builder.NewRunner(parent, typescript.Gen()),
+		builder.NewRunner(parent, python.Gen()),
+		builder.NewRunner(parent, gql.Gen()),
+		builder.NewRunner(parent, ts.Gen()),
 	)
+
 	err := bld.VisitSystem(ctx, s)
 	if err != nil {
 		ctx.Logger.Error("failed to generate system", uz.Error(err))

@@ -7,8 +7,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/jt05610/scaf/core"
-	_go "github.com/jt05610/scaf/go"
-	"github.com/jt05610/scaf/python"
+	"github.com/jt05610/scaf/lang"
 	"github.com/spf13/cobra"
 	uz "go.uber.org/zap"
 	"os"
@@ -61,7 +60,7 @@ directory and a new module configuration file.`,
 				modAuth = defaultAuthor
 			}
 		}
-		var lang core.Language
+		var ml *core.Language
 		if modLang == "" {
 			ctx.Logger.Debug("no module language provided, prompting user")
 			err := getValue("Module language", &modLang)
@@ -72,15 +71,15 @@ directory and a new module configuration file.`,
 		}
 		switch strings.ToLower(modLang) {
 		case "go", "":
-			lang = _go.Lang(parDir)
+			ml = lang.Go(parDir)
 		case "python", "py":
-			lang = python.Lang(parDir)
+			ml = lang.Go(parDir)
 		default:
 			ctx.Logger.Error("unsupported language", uz.String("lang", modLang))
 		}
 
 		ctx.Logger.Info("adding module", uz.String("name", modName))
-		err = system.AddModule(core.NewModule(modName, modDesc, modAuth, lang))
+		err = system.AddModule(core.NewModule(modName, modDesc, modAuth, ml))
 		if err != nil {
 			ctx.Logger.Error("failed to add module", uz.Error(err))
 			return
