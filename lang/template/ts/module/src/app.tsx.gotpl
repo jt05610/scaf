@@ -1,0 +1,11 @@
+import type {Component} from 'solid-js';
+
+const App: Component = () => {
+    return (
+        <main>
+            Hello, {{.Name}}!
+        </main>
+    );
+};
+
+export default App;

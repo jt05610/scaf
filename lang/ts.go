@@ -17,9 +17,11 @@ var tsTypes = &core.TypeMap{
 
 var tsScripts = &core.Scripts{
 	Init: `
+npm install
 npm install --save-dev --save-exact prettier
 echo {}> .prettierrc.json
-npm install --save-dev typescript @types/node
+`,
+	Gen: `
 npx prettier --write .
 `,
 }

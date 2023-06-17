@@ -2,30 +2,33 @@
 /// <reference types="vite/client" />
 
 import {defineConfig} from 'vite';
+import type {ServerOptions} from 'https';
 import federation from "@originjs/vite-plugin-federation";
 import solidPlugin from 'vite-plugin-solid';
+import fs from 'node:fs';
 
-defineConfig({
+const options : ServerOptions = {
+    key: fs.readFileSync("cmd/.secrets/{{.Name}}.local+3-key.pem"),
+    cert: fs.readFileSync("cmd/.secrets/{{.Name}}.local+3.pem"),
+}
+
+export default defineConfig({
     plugins: [
         solidPlugin(),
         federation({
-            name: {{.Name}},
+            name: "{{.Name}}",
             filename: 'remoteEntry.js',
             exposes: {
-{{- range .Exposes}}
-                {{.Name}}: 'http://{.Addr}:{.Port}/assets/remoteEntry.js',
-{{- end}},
+                {{.Name}}: 'https://localhost:{.PortMap.UI}/assets/remoteEntry.js',
             },
             shared: [
                 "solid-js",
-{{- range .Shared}}
-                {{.}},
-{{- end}},
             ]
         })
     ],
     server: {
-        port: 3000,
+        port: {{.PortMap.UI}},
+        https: options,
     },
     test: {
         environment: 'jsdom',
