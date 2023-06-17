@@ -14,6 +14,7 @@ import (
 	"{{.Name}}/v{{.Version}}/server"
 	"net"
 	{{- else}}
+	"os"
 	"os/exec"
 	{{- end}}
 	"log"
@@ -22,13 +23,17 @@ import (
 var srvAddr string
 var srvPort int
 
+func runRPC() {
+    {{service .}}
+}
+
 // serviceCmd represents the serve command
 var serviceCmd = &cobra.Command{
 	Use:   "service",
 	Short: "Runs the backend rpc server",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-        {{service .}}
+	    runRPC()
 	},
 }
 
