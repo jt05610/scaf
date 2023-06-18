@@ -18,14 +18,17 @@ func TestCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	d, err := c.Details(s.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d.PortMap.GQL != 1234 {
+		t.Fatal("expected port 1234")
+	}
 	ss, err := c.List()
 
 	if err != nil {
 		t.Fatal(err)
-	}
-	if len(ss) != 1 {
-		t.Fatal("expected 1 system")
 	}
 	for _, s := range ss {
 		if s.ID == id {

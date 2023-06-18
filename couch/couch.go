@@ -199,6 +199,23 @@ func (c *Couch[T]) buildListQuery() (*DocQuery, error) {
 	return listQuery(docs)
 }
 
+func (c *Couch[T]) Details(id string) (T, error) {
+	resp, err := http.Get(c.url + "/" + id)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+	t := new(T)
+	if err := json.NewDecoder(resp.Body).Decode(t); err != nil {
+		var zero T
+		return zero, err
+	}
+	return *t, nil
+}
+
 func (c *Couch[T]) List() ([]T, error) {
 	query, err := c.buildListQuery()
 	if err != nil {
