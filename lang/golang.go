@@ -13,12 +13,12 @@ var goService = `
 		rpc := server.Service()
 		{{.Name}}.Register{{pascal .Name}}Server(srv, rpc)
 
-		certData, err := secrets.ReadFile(".secrets/housework.local+3.pem")
+		certData, err := secrets.ReadFile(".secrets/{{.Name}}.local+3.pem")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		keyData, err := secrets.ReadFile(".secrets/housework.local+3-key.pem")
+		keyData, err := secrets.ReadFile(".secrets/{{.Name}}.local+3-key.pem")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -71,10 +71,20 @@ kill $(lsof -t -i:{{.Port}})
 `,
 }
 
+var goSysScripts = &core.Scripts{
+	Init: `
+mkcert {{.Name}}.bot localhost 127.0.0.1 ::1
+mkdir cmd
+mkdir cmd/.secrets
+mv {{.Name}}.bot+3.pem {{.Name}}.bot+3-key.pem cmd/.secrets
+`,
+}
+
 func Go(parent string) *core.Language {
 	l := core.CreateLanguage(
 		"go",
 		parent,
+		goSysScripts,
 		goScripts,
 		&goTpl,
 		goTypes,

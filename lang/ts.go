@@ -16,20 +16,22 @@ var tsTypes = &core.TypeMap{
 }
 
 var tsScripts = &core.Scripts{
-	Init: `
-npm install
-npm install --save-dev --save-exact prettier
-echo {}> .prettierrc.json
-`,
-	Gen: `
-npx prettier --write .
-`,
+	WorkDir: "ui",
 }
 
 func TypeScript(parent string) *core.Language {
+	tsSysScripts := &core.Scripts{
+		Init: `
+`,
+		Gen: `
+pnpm install
+npx prettier --write .
+`,
+	}
 	return core.CreateLanguage(
 		"ts",
 		parent,
+		tsSysScripts,
 		tsScripts,
 		&tsTpl,
 		tsTypes,

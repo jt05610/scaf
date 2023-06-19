@@ -4,6 +4,8 @@
 
 package graph
 
+{{- $pkgName := .Name}}
+
 //go:generate go run github.com/99designs/gqlgen generate
 
 import (
@@ -16,7 +18,7 @@ import (
 )
 
 type Resolver struct{
-	{{.Name}} {{.Name}}.{{pascal .Name}}Client
+	c {{.Name}}.{{pascal .Name}}Client
 }
 
 func NewResolver(cert []byte) *Resolver{
@@ -41,6 +43,9 @@ func NewResolver(cert []byte) *Resolver{
 		log.Fatal(err)
 	}
 	return &Resolver{
-		{{lower .Name}}: {{lower .Name}}.New{{pascal .Name}}Client(conn),
+		{{lower .Name}}.New{{pascal .Name}}Client(conn),
 		}
 }
+
+
+

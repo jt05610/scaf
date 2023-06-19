@@ -35,6 +35,7 @@ func Fortran(parent string) *core.Language {
 	return core.CreateLanguage(
 		"fortran",
 		parent,
+		nil,
 		fortranScripts,
 		&fortranTpl,
 		fortranTypes,

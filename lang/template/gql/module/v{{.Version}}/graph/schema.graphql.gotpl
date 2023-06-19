@@ -5,37 +5,47 @@
 schema {
     query: Query
     mutation: Mutation
-    # subscription: Subscription
-}
-
-{{- range .Types}}
-type {{.Name}} {
-	id : ID!
-    {{- range .Fields}}
-    {{.Name}}: {{typeTrans .}}
+    {{- if .HasSubs}}
+    subscription: Subscription
     {{- end}}
 }
-
-type {{pluralize (pascal .Name)}} {
-	{{lower (pluralize .Name)}}: [{{.Name}}]
-}
-
-input {{.Name}}Input {
-    {{- range .Fields}}
-    {{.Name}}: {{typeTrans .}}
-    {{- end}}
-}
-
-{{- end}}
 
 type Query {
     {{- range .Types}}
 {{- if .Query}}
     {{lower .Name}}(id: ID!): {{.Name}}
-    {{pluralize (lower .Name)}}: [{{.Name}}]
-{{- end}}
+    {{- if .Plural}}
+    {{lower .Plural}}: [{{.Name}}]
+    {{- end}}
+    {{- end}}
     {{- end}}
 }
+
+{{- range .Types}}
+type {{.Name}} {
+    {{- if .Query}}
+	id: ID!
+    {{- end}}
+    {{- range .Fields}}
+    {{.Name}}: {{typeTrans .}}
+    {{- end}}
+}
+
+{{- if .Plural}}
+type {{.Plural}} {
+	{{lower .Plural}}: [{{.Name}}]
+}
+{{- end}}
+
+
+input {{.Name}}Input {
+    {{- range .Fields}}
+    {{.Name}}: {{inputTrans .}}
+    {{- end}}
+}
+
+{{- end}}
+
 {{- range .Funcs}}
 
 input {{.Name}}Input {
@@ -53,7 +63,25 @@ type {{.Name}}Payload {
 {{- end}}
 
 type Mutation {
-    {{- range .Funcs}}
+{{- range .Types}}
+    {{- $tName := .Name}}
+    {{- if .Mutate}}
+    Create{{.Name}}(input: {{.Name}}Input): {{.Name}}
+    Update{{.Name}}(id: ID!, input: {{.Name}}Input): {{.Name}}
+    Delete{{.Name}}(id: ID!): {{.Name}}
+    {{- end}}
+{{- end}}
+{{- range .Funcs}}
     {{.Name}}(input: {{.Name}}Input): {{.Name}}Payload
+{{- end}}
+}
+
+{{- if .HasSubs}}
+type Subscribe {
+    {{- range .Types}}
+        {{- if .Subscribe}}
+    {{.Name}}(id: ID!): {{.Name}}
+        {{- end}}
     {{- end}}
 }
+{{- end}}

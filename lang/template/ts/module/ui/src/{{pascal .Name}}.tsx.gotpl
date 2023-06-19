@@ -1,6 +1,6 @@
 import type {Component} from 'solid-js';
 
-const App: Component = () => {
+const {{pascal .Name}}: Component = () => {
     return (
         <main>
             Hello, {{.Name}}!
@@ -8,4 +8,4 @@ const App: Component = () => {
     );
 };
 
-export default App;
+export default {{pascal .Name}};

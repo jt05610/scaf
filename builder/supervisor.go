@@ -49,7 +49,7 @@ func (s *Supervisor) VisitModule(ctx context.Context, m *core.Module) error {
 	ctx.Logger.Info("Starting module", uz.String("module", m.Name))
 	go func() {
 		go func() {
-			err := Run(ctx, m, lang.Start())
+			err := Run(ctx, m, lang.Mod.Start())
 			if err != nil {
 				ctx.Logger.Error("Error running module", uz.String("module", m.Name), uz.Error(err))
 			}

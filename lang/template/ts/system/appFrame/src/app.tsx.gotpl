@@ -1,0 +1,17 @@
+import type {Component} from 'solid-js';
+
+{{- range .Modules}}
+import {{pascal .Name}} from '{{.Name}}/{{pascal .Name}}';
+{{- end}}
+
+const App: Component = () => {
+    return (
+        <main>
+        {{- range .Modules}}
+            <{{pascal .Name}} />
+        {{- end}}
+        </main>
+    );
+};
+
+export default App;

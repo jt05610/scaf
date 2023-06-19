@@ -4,6 +4,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/jt05610/scaf/core"
 )
 
 func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
@@ -11,9 +12,10 @@ func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
 
 	d.UpdateFunc = func(msg tea.Msg, m *list.Model) tea.Cmd {
 		var title string
-
-		if i, ok := m.SelectedItem().(Item); ok {
-			title = i.Title()
+		var sys *core.System
+		var ok bool
+		if sys, ok = m.SelectedItem().(*core.System); ok {
+			title = sys.ID
 		} else {
 			return nil
 		}
@@ -23,7 +25,7 @@ func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
 			switch {
 			case key.Matches(msg, keys.choose):
 				return tea.Batch(m.NewStatusMessage(StatusMessageStyle("Loading Detail View for: "+title)), func() tea.Msg {
-					return ShowDetailMsg{}
+					return ShowDetailMsg{System: sys}
 				})
 
 			case key.Matches(msg, keys.remove):

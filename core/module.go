@@ -10,30 +10,37 @@ const (
 )
 
 type Type struct {
-	Name      string
-	Plural    string
-	Fields    FieldList
-	Funcs     []*Func
-	isArray   bool
-	Query     bool
-	Mutate    bool
-	Subscribe bool
+	Name        string
+	Plural      string
+	Fields      []*Field
+	IsArray     bool
+	Query       bool
+	Mutate      bool
+	Subscribe   bool
+	isPrimitive bool
 }
 
-type Aggregate struct {
-	Type
-	Individual *Type
+func (t *Type) IsPrimitive() bool {
+	return t.isPrimitive
 }
 
-var Int = &Type{Name: "int"}
-var Float = &Type{Name: "float"}
-var String = &Type{Name: "string"}
-var Bool = &Type{Name: "bool"}
+var Int = &Type{Name: "int", isPrimitive: true}
+var Float = &Type{Name: "float", isPrimitive: true}
+var String = &Type{Name: "string", isPrimitive: true}
+var Bool = &Type{Name: "bool", isPrimitive: true}
 
 func Array(t *Type) *Type {
-	t.isArray = true
-	return t
+	return &Type{
+		Name:      t.Name,
+		Plural:    t.Plural,
+		Fields:    t.Fields,
+		IsArray:   true,
+		Query:     t.Query,
+		Mutate:    t.Mutate,
+		Subscribe: t.Subscribe,
+	}
 }
+
 func (t *Type) string(l *Language, isInput bool) (ret string) {
 	var found bool
 	if ret, found = l.MapType(BaseType(t.Name)); !found {
@@ -42,7 +49,7 @@ func (t *Type) string(l *Language, isInput bool) (ret string) {
 			ret += "Input"
 		}
 	}
-	if t.isArray {
+	if t.IsArray {
 		return l.MakeArray(ret)
 	}
 	return ret
@@ -102,10 +109,16 @@ var TypeMapping = map[Language]map[BaseType]string{
 `
 
 type Field struct {
-	Name     string
-	Required bool
-	Type     *Type
-	Last     bool
+	Name        string `yaml:"name"`
+	Description string `yaml:"description"`
+	Required    bool   `yaml:"required,omitempty"`
+	Type        *Type  `yaml:"type"`
+	Last        bool   `yaml:"-"`
+}
+
+func (f *Field) IsPrimitive() bool {
+	return f.Type.IsPrimitive()
+
 }
 
 func (f *Field) TypeString(l *Language) string {
@@ -116,16 +129,17 @@ func (f *Field) InputString(l *Language) string {
 	return f.Type.InputString(l)
 }
 
-type FieldList []*Field
 type Func struct {
-	Name   string
-	Return FieldList
-	Params FieldList
+	Name        string
+	Description string
+	Return      []*Field
+	Params      []*Field
 }
 
 type API struct {
 	Name     string    `yaml:"name"`
 	PortMap  *PortMap  `yaml:"-"`
+	HasSubs  bool      `yaml:"-"`
 	Author   string    `yaml:"author"`
 	Version  int       `yaml:"version"`
 	Language *Language `yaml:"language"`
@@ -155,6 +169,10 @@ type Module struct {
 	API     map[string]*API
 }
 
+func (m *Module) Meta() *MetaData {
+	return m.MetaData
+}
+
 func NewModule(name, author, date string, lang *Language) *Module {
 	return &Module{
 		MetaData: &MetaData{
@@ -178,4 +196,16 @@ func NewModule(name, author, date string, lang *Language) *Module {
 			},
 		},
 	}
+}
+
+func (m *Module) AddType(t *Type) {
+	m.API["v1"].Types = append(m.API["v1"].Types, t)
+}
+
+func (m *Module) AddFunc(f *Func) {
+	m.API["v1"].Funcs = append(m.API["v1"].Funcs, f)
+}
+
+func (m *Module) AddDep(d *Module) {
+	m.API["v1"].Deps = append(m.API["v1"].Deps, d)
 }

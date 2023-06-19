@@ -6,10 +6,11 @@ import (
 )
 
 type Scripts struct {
-	Init  string
-	Gen   string
-	Start string
-	Stop  string
+	WorkDir string
+	Init    string
+	Gen     string
+	Start   string
+	Stop    string
 }
 
 type TypeMap struct {
@@ -35,7 +36,7 @@ func (m *TypeMap) Map(t BaseType) (string, bool) {
 }
 
 type Language struct {
-	*Cmd     `yaml:"-"`
+	*CmdSet  `yaml:"-"`
 	Service  string    `yaml:"service"`
 	Name     string    `yaml:"name"`
 	Scripts  *Scripts  `yaml:"scripts"`
@@ -57,10 +58,10 @@ func (l *Language) MakeArray(s string) string {
 	return fmt.Sprintf(l.ArrayFmt, s)
 }
 
-func CreateLanguage(name, parent string, scripts *Scripts, fs *embed.FS, types *TypeMap, arrayFmt string) *Language {
+func CreateLanguage(name, parent string, sysScripts, modScripts *Scripts, fs *embed.FS, types *TypeMap, arrayFmt string) *Language {
 	return &Language{
 		Name:     name,
-		Cmd:      NewCmd(parent, scripts),
+		CmdSet:   NewCmdSet(parent, sysScripts, modScripts),
 		fs:       fs,
 		TypeMap:  types,
 		ArrayFmt: arrayFmt,

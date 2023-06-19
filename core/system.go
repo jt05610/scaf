@@ -5,11 +5,11 @@ import "github.com/google/uuid"
 type MetaData struct {
 	ID          string   `yaml:"id" json:"_id,omitempty"`
 	Rev         string   `yaml:"rev" json:"_rev,omitempty"`
-	Name        string   `yaml:"name"`
-	Description string   `yaml:"description"`
-	Author      string   `yaml:"author"`
-	Date        string   `yaml:"date"`
-	PortMap     *PortMap `yaml:"ports"`
+	Name        string   `yaml:"name" json:"name,omitempty"`
+	Description string   `yaml:"description" json:"description,omitempty"`
+	Author      string   `yaml:"author" json:"author,omitempty"`
+	Date        string   `yaml:"date" json:"date,omitempty"`
+	PortMap     *PortMap `yaml:"ports" json:"port_map,omitempty"`
 }
 
 type Storable interface {
@@ -18,7 +18,7 @@ type Storable interface {
 
 type System struct {
 	*MetaData
-	Modules []*Module `yaml:"modules"`
+	Modules []*Module `yaml:"modules" json:"modules,omitempty"`
 }
 
 func (s *System) Meta() *MetaData {
@@ -48,13 +48,14 @@ func id() string {
 	return u.String()
 }
 
-func NewSystem(name, author, date string) *System {
+func NewSystem(name, description, author, date string) *System {
 	return &System{
 		MetaData: &MetaData{
-			ID:     id(),
-			Name:   name,
-			Author: author,
-			Date:   date,
+			ID:          id(),
+			Name:        name,
+			Description: description,
+			Author:      author,
+			Date:        date,
 			PortMap: &PortMap{
 				UI:  UIPort,
 				GQL: GQLPort,

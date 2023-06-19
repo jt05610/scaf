@@ -20,36 +20,31 @@ import (
 var sysConfig string
 
 func Gen(ctx context.Context, parent string, s *core.System) {
+	if sysConfig == "" {
+		sysConfig = parent + "/system.yaml"
+	}
 	ctx.Logger.Info("generating system", uz.String("name", s.Name))
 	goLang := lang.Go(parent)
 	gql := lang.GraphQL(parent)
 	proto := lang.Protobuf(parent)
-	python := lang.Python(parent)
 	ts := lang.TypeScript(parent)
 
 	bld := builder.NewBuilder(
 		codegen.New(parent, goLang),
 		codegen.New(parent, gql),
 		codegen.New(parent, proto),
-		codegen.New(parent, python),
 		codegen.New(parent, ts),
-		builder.NewRunner(parent, goLang.Init()),
-		builder.NewRunner(parent, proto.Init()),
-		builder.NewRunner(parent, gql.Init()),
-		builder.NewRunner(parent, ts.Init()),
-		builder.NewRunner(parent, python.Init()),
-		builder.NewRunner(parent, proto.Gen()),
-		builder.NewRunner(parent, goLang.Gen()),
-		builder.NewRunner(parent, python.Gen()),
-		builder.NewRunner(parent, gql.Gen()),
-		builder.NewRunner(parent, ts.Gen()),
+		builder.NewRunner(parent, goLang.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
+		builder.NewRunner(parent, proto.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
+		builder.NewRunner(parent, gql.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
+		builder.NewRunner(parent, ts.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
 	)
-
 	err := bld.VisitSystem(ctx, s)
 	if err != nil {
 		ctx.Logger.Error("failed to generate system", uz.Error(err))
 	}
 	ctx.Logger.Info("system generated", uz.String("name", s.Name))
+
 }
 
 // genCmd represents the gen command

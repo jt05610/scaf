@@ -1,0 +1,49 @@
+/// <reference types="vitest" />
+/// <reference types="vite/client" />
+
+import {defineConfig} from 'vite';
+import type {ServerOptions} from 'https';
+import federation from "@originjs/vite-plugin-federation";
+import solidPlugin from 'vite-plugin-solid';
+import fs from 'node:fs';
+
+const options : ServerOptions = {
+    key: fs.readFileSync("../cmd/.secrets/{{.Name}}.bot+3-key.pem"),
+    cert: fs.readFileSync("../cmd/.secrets/{{.Name}}.bot+3.pem"),
+}
+
+export default defineConfig({
+    server: {
+        port: {{.PortMap.GQL}},
+        https: options,
+    },
+    test: {
+        environment: 'jsdom',
+        globals: true,
+        transformMode: {web: [/\.[jt]sx?$/]},
+        setupFiles: ['node_modules/@testing-library/jest-dom/extend-expect.js'],
+        // otherwise, solid would be loaded twice:
+        deps: {registerNodeLoader: true},
+        threads: false,
+        isolate: false,
+    },
+    build: {
+        target: 'esnext',
+    },
+    resolve: {
+        conditions: ['development', 'browser'],
+    },
+    plugins: [
+        solidPlugin(),
+        federation({
+            name: '{{.Name}}',
+            filename: 'remoteEntry.js',
+            remotes: {
+            {{- range .Modules}}
+                '{{.Name}}': 'https://localhost:{{.PortMap.GQL}}/remoteEntry.js',
+            {{- end}}
+            },
+            shared: ["solid-js"],
+        }),
+    ],
+});

@@ -1,0 +1,4 @@
+packages:
+  - 'appFrame'
+  - 'gateway'
+  - '**/ui'

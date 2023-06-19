@@ -10,17 +10,51 @@ import (
 )
 
 type runner struct {
-	cfs    []func(m *core.Module) *exec.Cmd
-	parent string
-	seen   map[string]bool
+	cmd     *core.CmdSet
+	parent  string
+	seen    map[string]bool
+	scripts []ModScript
 }
 
 func (r *runner) VisitSystem(ctx context.Context, s *core.System) error {
 	ctx.Logger.Debug("Running commands", zap.String("system", s.Name))
 	r.seen = make(map[string]bool)
+
 	for _, m := range s.Modules {
 		if err := r.VisitModule(ctx, m); err != nil {
 			return err
+		}
+	}
+
+	if r.cmd.Sys != nil {
+		for _, script := range r.scripts {
+			switch script {
+			case ModScriptInit:
+				ctx.Logger.Debug("Running system init commands", zap.String("system", s.Name))
+				err := SysRun(ctx, s, r.cmd.Sys.Init())
+				if err != nil {
+					return err
+				}
+			case ModScriptStop:
+				ctx.Logger.Debug("Running system exit commands", zap.String("system", s.Name))
+				err := SysRun(ctx, s, r.cmd.Sys.Stop())
+				if err != nil {
+					return err
+				}
+			case ModScriptGen:
+				ctx.Logger.Debug("Running system gen commands", zap.String("system", s.Name))
+				err := SysRun(ctx, s, r.cmd.Sys.Gen())
+				if err != nil {
+					return err
+				}
+			case modScriptStart:
+				ctx.Logger.Debug("Running system start commands", zap.String("system", s.Name))
+				err := SysRun(ctx, s, r.cmd.Sys.Start())
+				if err != nil {
+					return err
+				}
+
+			}
 		}
 	}
 	return nil
@@ -47,6 +81,27 @@ func Run(ctx context.Context, m *core.Module, cfs []func(m *core.Module) *exec.C
 	return nil
 }
 
+func SysRun(ctx context.Context, s *core.System, cfs []func(m *core.System) *exec.Cmd) error {
+	for _, cf := range cfs {
+		cmd := cf(s)
+		var out bytes.Buffer
+		var stderr bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &stderr
+
+		ctx.Logger.Info(cmd.String())
+		err := cmd.Run()
+		ctx.Logger.Info(cmd.String(), zap.String("output", out.String()))
+		fmt.Println(stderr.String())
+		if err != nil {
+			ctx.Logger.Error(cmd.String(), zap.String("stderr", stderr.String()), zap.Error(err))
+			fmt.Println(stderr.String())
+			return err
+		}
+	}
+	return nil
+}
+
 func (r *runner) VisitModule(ctx context.Context, m *core.Module) error {
 	if _, seen := r.seen[m.Name]; seen {
 		return nil
@@ -54,14 +109,40 @@ func (r *runner) VisitModule(ctx context.Context, m *core.Module) error {
 	r.seen[m.Name] = true
 	for _, api := range m.API {
 		m.Version = api.Version
-		err := Run(ctx, m, r.cfs)
-		if err != nil {
-			return err
+		for _, s := range r.scripts {
+			var err error
+			switch s {
+			case ModScriptGen:
+				err = Run(ctx, m, r.cmd.Mod.Gen())
+			case ModScriptInit:
+				err = Run(ctx, m, r.cmd.Mod.Init())
+			case modScriptStart:
+				err = Run(ctx, m, r.cmd.Mod.Start())
+			case ModScriptStop:
+				err = Run(ctx, m, r.cmd.Mod.Stop())
+			}
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
-func NewRunner(parent string, cfs []func(m *core.Module) *exec.Cmd) core.Visitor {
-	return &runner{cfs: cfs, parent: parent, seen: make(map[string]bool)}
+type ModScript int
+
+const (
+	ModScriptGen ModScript = iota
+	ModScriptInit
+	modScriptStart
+	ModScriptStop
+)
+
+func NewRunner(parent string, set *core.CmdSet, scripts ...ModScript) core.Visitor {
+	return &runner{
+		cmd:     set,
+		parent:  parent,
+		seen:    make(map[string]bool),
+		scripts: scripts,
+	}
 }

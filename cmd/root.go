@@ -28,13 +28,7 @@ var parDir string
 func FakeSystems(n int) []*core.System {
 	ret := make([]*core.System, n)
 	for i := 0; i < n; i++ {
-		ret[i] = &core.System{
-			MetaData: &core.MetaData{
-				Name:        fmt.Sprintf("System %d", i),
-				Description: "This is a fake system",
-			},
-		}
-
+		ret[i] = core.NewSystem(fmt.Sprintf("System %d", i), "", "Jonathan Taylor", fmt.Sprintf("%d Jul 2023", i%31))
 	}
 	return ret
 }
@@ -58,7 +52,8 @@ For example, with scaf, you can:
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		m := tui.NewTUI(FakeSystems(10))
+		url := "http://scaf:fold@localhost:5984/test-systems"
+		m := tui.NewTUI(url)
 		p := tea.NewProgram(m)
 		if _, err := p.Run(); err != nil {
 			log.Fatal(err)

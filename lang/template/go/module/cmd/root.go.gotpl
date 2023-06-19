@@ -36,11 +36,6 @@ to quickly create a Cobra application.`,
             defer wg.Done()
             runRelay()
         }()
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			runUI()
-		}()
         wg.Wait()
      },
 }

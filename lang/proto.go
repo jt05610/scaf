@@ -29,6 +29,7 @@ func Protobuf(parent string) *core.Language {
 	return core.CreateLanguage(
 		"proto",
 		parent,
+		nil,
 		protobufScripts,
 		&protobufTpl,
 		protobufTypes,

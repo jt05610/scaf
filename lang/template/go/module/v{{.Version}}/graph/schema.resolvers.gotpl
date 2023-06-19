@@ -1,0 +1,72 @@
+{{- $pkgName := .Name}}
+
+{{- range .Types}}
+{{- if .Query}}
+func (r *queryResolver) {{pascal .Name}}(ctx context.Context, id string) (*{{$pkgName}}.{{pascal .Name}}, error) {
+    return r.c.Get{{pascal .Name}}(ctx, &{{$pkgName}}.Get{{pascal .Name}}Request{Id: id})
+}
+
+{{- if .Plural}}
+func (r *queryResolver) {{.Plural}}(ctx context.Context, ids []string) ([]*{{$pkgName}}.{{pascal .Name}}, error) {
+    return r.c.List{{pascal .Name}}(ctx, &{{$pkgName}}.Empty{})
+}
+
+{{- end}}
+{{- end}}
+{{- if .Mutate}}
+
+func (r *mutationResolver) Create{{pascal .Name}}(ctx context.Context, input *{{pascal .Name}}Input) (*{{$pkgName}}.{{pascal .Name}}, error) {
+    return r.c.Create{{pascal .Name}}(ctx, &{{$pkgName}}.{{lower .Name}}.Create{{pascal .Name}}Request{Input: input})
+}
+func (r *mutationResolver) Update{{pascal .Name}}(ctx context.Context, id string, input *{{pascal .Name}}Input) (*{{$pkgName}}.{{pascal .Name}}, error) {
+    return r.c.Update{{pascal .Name}}(ctx, &{{$pkgName}}.Update{{pascal .Name}}Request{Id: id, Input: input})
+}
+func (r *mutationResolver) Delete{{pascal .Name}}(ctx context.Context, id string) (*{{$pkgName}}.{{pascal .Name}}, error) {
+    return r.c.Delete{{pascal .Name}}(ctx, &{{$pkgName}}.Delete{{pascal .Name}}Request{Id: id})
+}
+{{- end}}
+{{- if .Subscribe}}
+func (r *subscriptionResolver) {{pascal .Name}}(ctx context.Context, id string) (<-chan *{{$pkgName}}.{{pascal .Name}}, error) {
+    stream, err := r.c.{{pascal .Name}}(ctx, &{{lower .Name}}.Get{{pascal .Name}}Request{Id: id})
+    if err != nil {
+        return nil, err
+    }
+    ch := make(chan *{{$pkgName}}.{{pascal .Name}})
+    go func() {
+        for {
+            msg, err := stream.Recv()
+            if err != nil {
+                close(ch)
+                return
+            }
+            ch <- msg
+        }
+    }()
+    return ch, nil
+}
+{{- end}}
+{{- end}}
+
+{{- range .Funcs}}
+func (r *mutationResolver) {{pascal .Name}}(ctx context.Context, input *{{$pkgName}}.{{pascal .Name}}Input) (*{{pascal .Name}}, error) {
+    return r.c.{{.Name}}(ctx, input)
+}
+{{- end}}
+
+// Mutation returns MutationResolver implementation.
+func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+
+// Query returns QueryResolver implementation.
+func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
+
+type mutationResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }
+
+{{- if .HasSubs}}
+
+func (r *Resolver) Subscription() SubscriptionResolver {
+    return &subscriptionResolver{r}
+}
+
+type subscriptionResolver struct {*Resolver}
+{{- end}}

@@ -35,6 +35,7 @@ func GraphQL(parent string) *core.Language {
 	return core.CreateLanguage(
 		"gql",
 		parent,
+		nil,
 		gqlScripts,
 		&gqlTpl,
 		gqlTypes,

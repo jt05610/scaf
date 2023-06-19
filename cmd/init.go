@@ -22,7 +22,7 @@ var name string
 func Init(ctx context.Context, name string) {
 	ctx.Logger.Info("initializing system", zap.String("name", name))
 
-	sys := core.NewSystem(name, DefaultAuthor(ctx), time.Now().Format("02 Jan 2006"))
+	sys := core.NewSystem(name, "", DefaultAuthor(ctx), time.Now().Format("02 Jan 2006"))
 	path := filepath.Join(parDir, name)
 	err := os.MkdirAll(path, 0755)
 	if err != nil {

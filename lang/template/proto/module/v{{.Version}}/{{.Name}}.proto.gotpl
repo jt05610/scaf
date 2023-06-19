@@ -10,42 +10,71 @@ option go_package = "{{.Name}}/v1/{{.Name}}";
 
 message Empty {}
 {{ range .Types}}
-message {{pascal .Name}} {
-	int64 id = 1;
+message {{.Name}} {
+    {{- if .Query }}
+    string id = 1;
     {{- range $index, $elem := .Fields}}
     {{typeTrans $elem}} {{$elem.Name}} = {{add $index 2}};
     {{- end}}
-}
-
-message Get{{pascal .Name}}Input {
-	int64 id = 1;
-}
-
-message {{pascal .Name}}Input {
+    {{- else}}
     {{- range $index, $elem := .Fields}}
     {{typeTrans $elem}} {{$elem.Name}} = {{add $index 1}};
     {{- end}}
+    {{- end}}
 }
 
-message {{pluralize (pascal .Name)}} {
-	repeated {{pascal .Name}} {{pluralize (lower .Name)}} = 1;
+{{- if .Query}}
+message Get{{.Name}}Input {
+    string id = 1;
+}
+{{- end}}
+
+message {{.Name}}Input {
+{{- if .Query}}
+    string id = 1;
+    {{- range $index, $elem := .Fields}}
+    {{inputTrans $elem}} {{$elem.Name}} = {{add $index 2}};
+    {{- end}}
+    {{- else}}
+    {{- range $index, $elem := .Fields}}
+    {{inputTrans $elem}} {{$elem.Name}} = {{add $index 1}};
+    {{- end}}
+{{- end}}
+
 }
 
+{{- if ne .Plural ""}}
+message {{.Plural}} {
+	repeated {{.Name}} {{lower .Plural}} = 1;
+}
+{{- end}}
 
 {{- end}}
 
 service {{pascal .Name}} {
     {{- range .Funcs}}
-	rpc {{pascal .Name}} ({{pascal .Name}}Input) returns ({{pascal .Name}}Payload);
+    rpc {{.Name}} ({{.Name}}Input) returns ({{.Name}}Payload);
     {{- end}}
 	{{- range .Types}}
-	rpc Get (Get{{pascal .Name}}Input) returns ({{pascal .Name}});
-	rpc List (Empty) returns ({{pluralize (pascal .Name)}});
+	{{- if .Query}}
+    rpc Get{{.Name}} (Get{{.Name}}Input) returns ({{.Name}});
+    {{- if ne .Plural ""}}
+    rpc List{{.Name}} (Empty) returns ({{.Plural}});
+    {{- end}}
+    {{- end}}
+    {{- if .Mutate}}
+    rpc Create{{.Name}} ({{.Name}}Input) returns ({{.Name}});
+    rpc Update{{.Name}} ({{.Name}}Input) returns ({{.Name}});
+    rpc Delete{{.Name}} (Get{{.Name}}Input) returns ({{.Name}});
+    {{- end}}
+    {{- if .Subscribe}}
+    rpc Consume{{.Name}} (Empty) returns (stream {{.Name}});
+    {{- end}}
 	{{- end}}
 }
 
 {{- range .Funcs}}
-message {{pascal .Name}}Input {
+message {{.Name}}Input {
 	{{- if .Params}}
     {{- range $index, $elem := .Params}}
     {{inputTrans $elem}} {{$elem.Name}} = {{add $index 1}};
@@ -53,7 +82,7 @@ message {{pascal .Name}}Input {
 	{{- end}}
 }
 
-message {{pascal .Name}}Payload {
+message {{.Name}}Payload {
 	{{- if .Return}}
     {{- range $index, $elem := .Return}}
     {{typeTrans $elem}} {{$elem.Name}} = {{add $index 1}};

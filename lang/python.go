@@ -39,6 +39,7 @@ func Python(parent string) *core.Language {
 	l := core.CreateLanguage(
 		"python",
 		parent,
+		nil,
 		pyScripts,
 		&pyTpl,
 		pyTypes,

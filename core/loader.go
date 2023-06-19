@@ -1,7 +1,9 @@
 package core
 
 import (
+	"bytes"
 	"embed"
+	"fmt"
 	"github.com/gertd/go-pluralize"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -10,6 +12,97 @@ import (
 	"strings"
 	"text/template"
 )
+
+// TypeCrawler visits all types and generates functions to translate inputs into the correct type
+type TypeCrawler struct {
+	seen  map[*Type]string
+	l     *Language
+	Types []*Type
+	tpl   *template.Template
+}
+
+// VisitField visits a field and generates functions to translate inputs into the correct type
+func (c *TypeCrawler) VisitField(f *Field) error {
+	if !f.Type.IsPrimitive() {
+		if err := c.VisitType(f.Type); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// VisitType visits a type and generates functions to translate inputs into the correct type
+func (c *TypeCrawler) VisitType(t *Type) error {
+	if _, seen := c.seen[t]; seen {
+		return nil
+	}
+	var buf bytes.Buffer
+	err := c.tpl.Execute(&buf, t)
+	if err != nil {
+		return err
+	}
+
+	c.seen[t] = buf.String()
+	for _, f := range t.Fields {
+		if err := c.VisitField(f); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *TypeCrawler) Crawl() error {
+	for _, t := range c.Types {
+		if err := c.VisitType(t); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *TypeCrawler) String() string {
+	var buf bytes.Buffer
+	for _, t := range c.Types {
+		buf.WriteString(c.seen[t])
+	}
+	return buf.String()
+}
+
+func NewCrawler(l *Language, m *API) *TypeCrawler {
+	tpl := template.Must(template.New("translateFuncs").Funcs(funcMap(l)).Parse(fmt.Sprintf(`
+func New{{.Name}}(input *%s.{{.Name}}Input) *%s.{{.Name}} {
+	ret := &%s.{{.Name}}{
+	{{- range .Fields}}
+		{{- if .Type.IsArray}}
+	{{.Name}}: make([]*%s.{{.Type.Name}}, len(input.{{.Name}})),
+		{{- else}}
+	{{.Name}}: {{if .Type.IsPrimitive}}input.{{.Name}}{{else}}New{{typeTrans .}}(input.{{.Name}}){{end}},
+		{{- end}}
+	{{- end}}
+	}
+
+	{{- range .Fields}}
+		{{- if .Type.IsArray}}
+	for _, i := range input.{{.Name}} {
+			{{- if .Type.IsPrimitive}}
+		ret.{{.Name}} = append(ret.{{.Name}}, i)
+			{{- else}}
+		ret.{{.Name}} = append(ret.{{.Name}}, New{{.Type.Name}}(i))
+			{{- end}}
+	}
+		{{- end}}
+	{{- end}}
+	return ret
+}
+`, m.Name, m.Name, m.Name, m.Name)))
+	return &TypeCrawler{
+		seen:  make(map[*Type]string),
+		Types: m.Types,
+		l:     l,
+		tpl:   tpl,
+	}
+}
 
 func funcMap(l *Language) template.FuncMap {
 	base := template.FuncMap{
@@ -26,6 +119,13 @@ func funcMap(l *Language) template.FuncMap {
 		"lower":     cases.Lower(language.Und).String,
 		"upper":     cases.Upper(language.Und).String,
 		"pascal":    cases.Title(language.Und).String,
+		"translateFuncs": func(m *API) string {
+			c := NewCrawler(l, m)
+			if err := c.Crawl(); err != nil {
+				panic(err)
+			}
+			return c.String()
+		},
 	}
 	base["service"] = func(api *API) string {
 		t, err := template.New("service").Funcs(base).Parse(api.Language.Service)

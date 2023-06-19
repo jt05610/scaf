@@ -4,6 +4,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jt05610/scaf/context"
 	"github.com/jt05610/scaf/core"
+	"github.com/jt05610/scaf/couch"
 	"github.com/jt05610/scaf/tui/views"
 )
 
@@ -18,9 +19,11 @@ const (
 )
 
 type TUI struct {
+	systems     []*core.System
+	client      *couch.Couch[*core.System]
 	currentView CurrentView
 	list        *views.ListView
-	detail      *views.Form
+	form        *views.Form
 }
 
 func (t *TUI) VisitSystem(ctx context.Context, s *core.System) error {
@@ -33,31 +36,37 @@ func (t *TUI) VisitModule(ctx context.Context, m *core.Module) error {
 	panic("implement me")
 }
 
-func NewTUI(systems []*core.System) tea.Model {
-	items := make([]views.Item, len(systems))
-	for i, system := range systems {
-		items[i] = system
-	}
-
+func NewTUI(url string) tea.Model {
 	return &TUI{
 		currentView: ListView,
-		list:        views.NewListView("Systems", items),
-		detail: views.NewForm("System", []*views.FormInput{
-			{
-				Name:     "Name",
-				Prompt:   "",
-				Validate: nil,
-			},
-			{
-				Name:     "Description",
-				Prompt:   "",
-				Validate: nil,
-			},
-		}),
+		client:      couch.NewCouch[*core.System](url),
 	}
 }
 
+var SysInputs = []*views.FormInput{
+	{
+		Name: "Name",
+	},
+	{
+		Name: "Description",
+	},
+	{
+		Name: "Author",
+	},
+}
+
 func (t *TUI) Init() tea.Cmd {
+	var err error
+	t.systems, err = t.client.List()
+	if err != nil {
+		panic(err)
+	}
+	items := make([]views.Item, len(t.systems))
+	for i, s := range t.systems {
+		items[i] = s
+	}
+	t.list = views.NewListView("Systems", items)
+	t.form = views.NewForm[*core.System]("System", t.systems[0])
 	return t.list.Init()
 }
 
@@ -80,7 +89,7 @@ func (t *TUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ListView:
 		t.list, cmd = t.list.Update(msg)
 	case DetailView:
-		t.detail, cmd = t.detail.Update(msg)
+		t.form, cmd = t.form.Update(msg)
 	case ConfirmView:
 	case CreateView:
 	case UpdateView:
@@ -94,7 +103,7 @@ func (t *TUI) View() string {
 	case ListView:
 		return t.list.View()
 	case DetailView:
-		return t.detail.View()
+		return t.form.View()
 	case ConfirmView:
 	case CreateView:
 	case UpdateView:
