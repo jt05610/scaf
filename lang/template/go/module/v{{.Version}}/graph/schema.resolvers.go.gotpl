@@ -1,29 +1,39 @@
+package graph
 {{- $pkgName := .Name}}
 
-{{- range .Types}}
+import (
+	"context"
+	"{{$pkgName}}/v1"
+)
+
+{{range .Types}}
 {{- if .Query}}
 func (r *queryResolver) {{pascal .Name}}(ctx context.Context, id string) (*{{$pkgName}}.{{pascal .Name}}, error) {
-    return r.c.Get{{pascal .Name}}(ctx, &{{$pkgName}}.Get{{pascal .Name}}Request{Id: id})
+    return r.c.Get{{pascal .Name}}(ctx, &{{$pkgName}}.Get{{pascal .Name}}Input{Id: id})
 }
-
-{{- if .Plural}}
+{{if .Plural}}
 func (r *queryResolver) {{.Plural}}(ctx context.Context, ids []string) ([]*{{$pkgName}}.{{pascal .Name}}, error) {
-    return r.c.List{{pascal .Name}}(ctx, &{{$pkgName}}.Empty{})
+    res, err := r.c.List{{pascal .Name}}(ctx, &{{$pkgName}}.Empty{})
+    if err != nil {
+        return nil, err
+    }
+    return res.{{pascal .Plural}}, nil
 }
-
-{{- end}}
+{{end}}
 {{- end}}
 {{- if .Mutate}}
-
 func (r *mutationResolver) Create{{pascal .Name}}(ctx context.Context, input *{{pascal .Name}}Input) (*{{$pkgName}}.{{pascal .Name}}, error) {
-    return r.c.Create{{pascal .Name}}(ctx, &{{$pkgName}}.{{lower .Name}}.Create{{pascal .Name}}Request{Input: input})
+    return r.c.Create{{pascal .Name}}(ctx, input)
 }
+
 func (r *mutationResolver) Update{{pascal .Name}}(ctx context.Context, id string, input *{{pascal .Name}}Input) (*{{$pkgName}}.{{pascal .Name}}, error) {
-    return r.c.Update{{pascal .Name}}(ctx, &{{$pkgName}}.Update{{pascal .Name}}Request{Id: id, Input: input})
+    return r.c.Update{{pascal .Name}}(ctx, input)
 }
+
 func (r *mutationResolver) Delete{{pascal .Name}}(ctx context.Context, id string) (*{{$pkgName}}.{{pascal .Name}}, error) {
-    return r.c.Delete{{pascal .Name}}(ctx, &{{$pkgName}}.Delete{{pascal .Name}}Request{Id: id})
+    return r.c.Delete{{pascal .Name}}(ctx, &{{$pkgName}}.Get{{pascal .Name}}Input{Id: id})
 }
+
 {{- end}}
 {{- if .Subscribe}}
 func (r *subscriptionResolver) {{pascal .Name}}(ctx context.Context, id string) (<-chan *{{$pkgName}}.{{pascal .Name}}, error) {

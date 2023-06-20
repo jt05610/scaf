@@ -12,6 +12,7 @@ const (
 type Type struct {
 	Name        string
 	Plural      string
+	Description string
 	Fields      []*Field
 	IsArray     bool
 	Query       bool

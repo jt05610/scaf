@@ -6,6 +6,76 @@ import (
 	"testing"
 )
 
+// Data creates a module for managing data
+func Data(parent string) *core.Module {
+	t := &core.Type{
+		Name:   "Database",
+		Plural: "Databases",
+		Fields: []*core.Field{
+			{Name: "Name", Type: core.String},
+		},
+		Query:     true,
+		Mutate:    true,
+		Subscribe: false,
+	}
+
+	return &core.Module{
+		MetaData: &core.MetaData{
+			Name:        "data",
+			Description: "data is used for managing data",
+			Author:      "Jonathan Taylor",
+			Date:        "20 Jun 2023",
+		},
+		Version: 1,
+		API: map[string]*core.API{
+			"v1": {
+				Name:     "data",
+				Version:  1,
+				Date:     "20 Jun 2023",
+				Author:   "Jonathan Taylor",
+				Language: lang.Go(parent),
+				Types:    []*core.Type{t},
+			},
+		},
+	}
+}
+
+// User creates a module for managing users.
+func User(parent string) *core.Module {
+	t := &core.Type{
+		Name:   "User",
+		Plural: "Users",
+		Fields: []*core.Field{
+			{Name: "Name", Type: core.String},
+			{Name: "Email", Type: core.String},
+			{Name: "Password", Type: core.String},
+		},
+		Query:     true,
+		Mutate:    true,
+		Subscribe: false,
+	}
+	return &core.Module{
+		MetaData: &core.MetaData{
+			Name:        "identity",
+			Description: "users is used for managing users",
+			Author:      "Jonathan Taylor",
+			Date:        "20 Jun 2023",
+		},
+		Version: 1,
+		API: map[string]*core.API{
+			"v1": {
+				Name:     "identity",
+				Version:  1,
+				Date:     "20 Jun 2023",
+				Author:   "Jonathan Taylor",
+				Language: lang.Go(parent),
+				Types:    []*core.Type{t},
+			},
+		},
+	}
+
+}
+
 // Creator creates a module for that is used for creating modules
 func Creator(parent string) *core.Module {
 	t := &core.Type{
@@ -135,7 +205,6 @@ func Creator(parent string) *core.Module {
 				Author:   "Jonathan Taylor",
 				Language: lang.Go(parent),
 				Types:    types,
-				Funcs:    []*core.Func{},
 			},
 		},
 	}
@@ -143,7 +212,15 @@ func Creator(parent string) *core.Module {
 
 func SCAFSystem(name string) *core.System {
 	s := core.NewSystem(name, "The core system for scaf", "Jonathan Taylor", "18 Jun 2023")
-	err := s.AddModule(Creator(name))
+	err := s.AddModule(Data(name))
+	if err != nil {
+		panic(err)
+	}
+	err = s.AddModule(User(name))
+	if err != nil {
+		panic(err)
+	}
+	err = s.AddModule(Creator(name))
 	if err != nil {
 		panic(err)
 	}

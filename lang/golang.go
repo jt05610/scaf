@@ -57,26 +57,35 @@ var goTypes = &core.TypeMap{
 
 var goScripts = &core.Scripts{
 	Init: `
-`,
-	Gen: `
 mkcert {{.Name}}.local localhost 127.0.0.1 ::1
 mkdir ./cmd/.secrets
 mv {{.Name}}.local+3.pem {{.Name}}.local+3-key.pem ./cmd/.secrets
+go mod tidy
 `,
-	Start: `
-{{.Name}} serve --port {{.Port}} 
+	Gen: `
+go generate ./...
+go fmt ./...
 `,
-	Stop: `
-kill $(lsof -t -i:{{.Port}})
+	Build: `
+go build 
+go install
 `,
 }
 
 var goSysScripts = &core.Scripts{
 	Init: `
 mkcert {{.Name}}.bot localhost 127.0.0.1 ::1
-mkdir cmd
 mkdir cmd/.secrets
 mv {{.Name}}.bot+3.pem {{.Name}}.bot+3-key.pem cmd/.secrets
+go mod tidy
+`,
+	Gen: `
+go generate ./...
+go fmt ./...
+`,
+	Build: `
+go build 
+go install
 `,
 }
 

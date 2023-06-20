@@ -23,20 +23,14 @@ go mod tidy
 go generate ./...
 go fmt ./...
 `,
-	Start: `
-{{.Name}} serve --port {{.Port}} 
-`,
-	Stop: `
-kill $(lsof -t -i:{{.Port}})
-`,
 }
 
 func GraphQL(parent string) *core.Language {
 	return core.CreateLanguage(
 		"gql",
 		parent,
-		nil,
 		gqlScripts,
+		nil,
 		&gqlTpl,
 		gqlTypes,
 		"[%s]",

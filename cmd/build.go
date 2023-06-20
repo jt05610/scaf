@@ -7,7 +7,6 @@ package cmd
 import (
 	"fmt"
 	"github.com/jt05610/scaf/builder"
-	"github.com/jt05610/scaf/codegen"
 	"github.com/jt05610/scaf/context"
 	"github.com/jt05610/scaf/core"
 	"github.com/jt05610/scaf/lang"
@@ -17,38 +16,26 @@ import (
 	"os"
 )
 
-var sysConfig string
-
-func Gen(ctx context.Context, parent string, s *core.System) {
-	if sysConfig == "" {
-		sysConfig = parent + "/system.yaml"
-	}
-	ctx.Logger.Info("generating system", uz.String("name", s.Name))
+func Build(ctx context.Context, parent string, s *core.System) {
+	ctx.Logger.Info("building system", uz.String("name", s.Name))
 	goLang := lang.Go(parent)
-	gql := lang.GraphQL(parent)
-	proto := lang.Protobuf(parent)
 	ts := lang.TypeScript(parent)
 
 	bld := builder.NewBuilder(
-		codegen.New(parent, goLang),
-		codegen.New(parent, gql),
-		codegen.New(parent, proto),
-		codegen.New(parent, ts),
-		builder.NewRunner(parent, proto.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
-		builder.NewRunner(parent, goLang.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
-		builder.NewRunner(parent, ts.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
+		builder.NewRunner(parent, goLang.CmdSet, builder.ModScriptBuild),
+		builder.NewRunner(parent, ts.CmdSet, builder.ModScriptBuild),
 	)
 
 	err := bld.VisitSystem(ctx, s)
 	if err != nil {
-		ctx.Logger.Error("failed to generate system", uz.Error(err))
+		ctx.Logger.Error("failed to build system", uz.Error(err))
 	}
-	ctx.Logger.Info("system generated", uz.String("name", s.Name))
+	ctx.Logger.Info("system built", uz.String("name", s.Name))
 
 }
 
 // genCmd represents the gen command
-var genCmd = &cobra.Command{
+var buildCmd = &cobra.Command{
 	Use:   "gen",
 	Short: "generate code for a system",
 	Long:  `Rather than write code for a system by hand, scaf can generate almost all of it for you!`,
@@ -74,7 +61,5 @@ var genCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(genCmd)
-
-	genCmd.Flags().StringVarP(&sysConfig, "config", "s", "", "system configuration file")
+	rootCmd.AddCommand(buildCmd)
 }

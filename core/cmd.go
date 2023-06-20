@@ -14,6 +14,7 @@ type Cmd[T Storable] struct {
 	gen   []func(m T) *exec.Cmd
 	start []func(m T) *exec.Cmd
 	stop  []func(m T) *exec.Cmd
+	build []func(m T) *exec.Cmd
 }
 
 func (c *Cmd[T]) Gen() []func(m T) *exec.Cmd {
@@ -30,6 +31,10 @@ func (c *Cmd[T]) Start() []func(m T) *exec.Cmd {
 
 func (c *Cmd[T]) Stop() []func(m T) *exec.Cmd {
 	return c.stop
+}
+
+func (c *Cmd[T]) Build() []func(m T) *exec.Cmd {
+	return c.build
 }
 
 func ModFuncs(parent, cc string, sub ...string) []func(m *Module) *exec.Cmd {
@@ -116,6 +121,7 @@ func NewSysCmd(parent string, scripts *Scripts) (cmd *Cmd[*System]) {
 			gen:   SysFuncs(parent, scripts.Gen),
 			start: SysFuncs(parent, scripts.Start),
 			stop:  SysFuncs(parent, scripts.Stop),
+			build: SysFuncs(parent, scripts.Build),
 		}
 	} else {
 		cmd = &Cmd[*System]{
@@ -123,6 +129,7 @@ func NewSysCmd(parent string, scripts *Scripts) (cmd *Cmd[*System]) {
 			gen:   SysFuncs(parent, scripts.Gen, scripts.WorkDir),
 			start: SysFuncs(parent, scripts.Start, scripts.WorkDir),
 			stop:  SysFuncs(parent, scripts.Stop, scripts.WorkDir),
+			build: SysFuncs(parent, scripts.Build, scripts.WorkDir),
 		}
 	}
 	return
@@ -138,6 +145,7 @@ func NewModCmd(parent string, scripts *Scripts) (cmd *Cmd[*Module]) {
 			gen:   ModFuncs(parent, scripts.Gen),
 			start: ModFuncs(parent, scripts.Start),
 			stop:  ModFuncs(parent, scripts.Stop),
+			build: ModFuncs(parent, scripts.Build),
 		}
 	} else {
 		cmd = &Cmd[*Module]{
@@ -145,6 +153,7 @@ func NewModCmd(parent string, scripts *Scripts) (cmd *Cmd[*Module]) {
 			gen:   ModFuncs(parent, scripts.Gen, scripts.WorkDir),
 			start: ModFuncs(parent, scripts.Start, scripts.WorkDir),
 			stop:  ModFuncs(parent, scripts.Stop, scripts.WorkDir),
+			build: ModFuncs(parent, scripts.Build, scripts.WorkDir),
 		}
 	}
 	return

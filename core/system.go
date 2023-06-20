@@ -40,7 +40,7 @@ func (s *System) Description() string {
 const (
 	UIPort  = 4000
 	GQLPort = 8080
-	RPCPort = 5000
+	RPCPort = 5050
 )
 
 func id() string {
@@ -67,7 +67,7 @@ func NewSystem(name, description, author, date string) *System {
 }
 
 func (s *System) AddModule(m *Module) error {
-	m.PortMap = s.PortMap.Add(1)
+	m.PortMap = s.PortMap.Add(len(s.Modules) + 1)
 	s.Modules = append(s.Modules, m)
 	return nil
 }

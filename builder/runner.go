@@ -25,7 +25,6 @@ func (r *runner) VisitSystem(ctx context.Context, s *core.System) error {
 			return err
 		}
 	}
-
 	if r.cmd.Sys != nil {
 		for _, script := range r.scripts {
 			switch script {
@@ -53,7 +52,12 @@ func (r *runner) VisitSystem(ctx context.Context, s *core.System) error {
 				if err != nil {
 					return err
 				}
-
+			case ModScriptBuild:
+				ctx.Logger.Debug("Running system build commands", zap.String("system", s.Name))
+				err := SysRun(ctx, s, r.cmd.Sys.Build())
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -120,6 +124,8 @@ func (r *runner) VisitModule(ctx context.Context, m *core.Module) error {
 				err = Run(ctx, m, r.cmd.Mod.Start())
 			case ModScriptStop:
 				err = Run(ctx, m, r.cmd.Mod.Stop())
+			case ModScriptBuild:
+				err = Run(ctx, m, r.cmd.Mod.Build())
 			}
 			if err != nil {
 				return err
@@ -134,6 +140,7 @@ type ModScript int
 const (
 	ModScriptGen ModScript = iota
 	ModScriptInit
+	ModScriptBuild
 	modScriptStart
 	ModScriptStop
 )

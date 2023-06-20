@@ -8,6 +8,7 @@ import (
 type Scripts struct {
 	WorkDir string
 	Init    string
+	Build   string
 	Gen     string
 	Start   string
 	Stop    string

@@ -27,6 +27,9 @@ func TypeScript(parent string) *core.Language {
 pnpm install
 npx prettier --write .
 `,
+		Build: `
+pnpm run build
+`,
 	}
 	return core.CreateLanguage(
 		"ts",

@@ -6,7 +6,7 @@
     "start": "vite",
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview",
+    "serve": "pnpm run build && vite",
     "test": "vitest"
   },
   "license": "MIT",

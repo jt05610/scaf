@@ -5,18 +5,13 @@ import (
 	"github.com/jt05610/scaf/context"
 	"github.com/jt05610/scaf/testData"
 	"github.com/jt05610/scaf/zap"
-	"os"
 	"testing"
 )
 
-func TestGen(t *testing.T) {
+func TestBuild(t *testing.T) {
 	parent := "core"
-	err := os.RemoveAll(parent)
-	if err != nil && !os.IsNotExist(err) {
-		t.Fatal(err)
-	}
 	s := testData.SCAFSystem(parent)
-	logger := zap.NewDev(context.Background(), "testing", "gen_test")
+	logger := zap.NewDev(context.Background(), "core", "build_test")
 	ctx := context.NewContext(logger)
-	cmd.Gen(ctx, parent, s)
+	cmd.Build(ctx, parent, s)
 }
