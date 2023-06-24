@@ -2,49 +2,27 @@
 # Author: {{.Author}}
 # Date: {{.Date}}
 
-schema {
-    query: Query
-    mutation: Mutation
-    {{- if .HasSubs}}
-    subscription: Subscription
+extend schema
+    @link(url: "https://specs.apollo.dev/federation/v2.1",
+       import: ["@key", "@shareable", "@tag", "@external", "@inaccessible", "@composeDirective"])
+
+extend type User @key(fields: "id") {
+    {{- range .Models}}
+{{- if .Query}}
+    {{lower .Plural}}: [{{.Name}}]
+    {{- end}}
     {{- end}}
 }
 
 type Query {
-    {{- range .Types}}
-{{- if .Query}}
+{{- range .Models}}
+    {{- if .Query}}
     {{lower .Name}}(id: ID!): {{.Name}}
-    {{- if .Plural}}
     {{lower .Plural}}: [{{.Name}}]
     {{- end}}
-    {{- end}}
-    {{- end}}
-}
-
-{{- range .Types}}
-type {{.Name}} {
-    {{- if .Query}}
-	id: ID!
-    {{- end}}
-    {{- range .Fields}}
-    {{.Name}}: {{typeTrans .}}
-    {{- end}}
-}
-
-{{- if .Plural}}
-type {{.Plural}} {
-	{{lower .Plural}}: [{{.Name}}]
-}
 {{- end}}
-
-
-input {{.Name}}Input {
-    {{- range .Fields}}
-    {{.Name}}: {{inputTrans .}}
-    {{- end}}
 }
-
-{{- end}}
+{{translateFuncs .}}
 
 {{- range .Funcs}}
 
@@ -59,16 +37,42 @@ type {{.Name}}Payload {
 	{{.Name}}: {{typeTrans .}}
 	{{- end}}
 }
-
 {{- end}}
 
 type Mutation {
-{{- range .Types}}
+{{- range .Models}}
     {{- $tName := .Name}}
-    {{- if .Mutate}}
-    Create{{.Name}}(input: {{.Name}}Input): {{.Name}}
-    Update{{.Name}}(id: ID!, input: {{.Name}}Input): {{.Name}}
-    Delete{{.Name}}(id: ID!): {{.Name}}
+    create{{.Name}}(input: {{.Name}}Input): {{.Name}}
+    update{{.Name}}(id: ID!, input: {{.Name}}Input): {{.Name}}
+    delete{{.Name}}(id: ID!): {{.Name}}
+    {{- range .Fields}}
+        {{- if not .IsExternal}}
+            {{- if .Update}}
+                {{- if .IsArray}}
+    add{{.Name}}(id: ID!, input: {{inputTrans .}}): {{typeTrans .}}
+                {{- else}}
+    update{{.Name}}(id: ID!, input: {{inputTrans .}}): {{typeTrans .}}
+                {{- end}}
+            {{- end}}
+            {{- if .Delete}}
+                {{- if .Update}}
+                    {{- if .IsArray}}
+    add{{.Name}}(id: ID!, input: {{inputTrans .}}): {{typeTrans .}}
+                    {{- else}}
+    update{{.Name}}(id: ID!, input: {{inputTrans .}}): {{typeTrans .}}
+                    {{- end}}
+                {{- end}}
+            {{- end}}
+        {{- else}}
+            {{- if .Update}}
+                {{- if .IsArray}}
+    add{{.Type.Name}}(id: ID!, input: [ID]): {{typeTrans .}}
+    remove{{.Type.Name}}(id: ID!, input: [ID]): {{typeTrans .}}
+                {{- else}}
+    update{{.Type.Name}}(id: ID!, input: ID): {{typeTrans .}}
+                {{- end}}
+            {{- end}}
+        {{- end}}
     {{- end}}
 {{- end}}
 {{- range .Funcs}}
@@ -78,7 +82,7 @@ type Mutation {
 
 {{- if .HasSubs}}
 type Subscribe {
-    {{- range .Types}}
+    {{- range .Models}}
         {{- if .Subscribe}}
     {{.Name}}(id: ID!): {{.Name}}
         {{- end}}

@@ -1,0 +1,9 @@
+{{- $sysName := .Name -}}
+federation_version: 2
+subgraphs:
+{{- range .Modules }}
+  {{.Name}}:
+    routing_url: http://localhost:{{.PortMap.GQL}}/graphql
+    schema:
+      file: ./{{.Name}}/v{{.Version}}/graph/schema.graphql
+{{- end}}
