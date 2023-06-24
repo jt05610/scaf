@@ -9,7 +9,7 @@ package {{.Name}};
 option go_package = "{{.Name}}/v1/{{.Name}}";
 
 message Empty {}
-{{ range .Types}}
+{{ range .Models}}
 message {{.Name}} {
     {{- if .Query }}
     string id = 1;
@@ -49,28 +49,69 @@ message {{.Plural}} {
 }
 {{- end}}
 
+
+{{- range .Fields}}
+
+{{- if .Query}}
+message Get{{.Name}}Input {
+    string id = 1;
+}
 {{- end}}
 
+{{- if .Create}}
+message Create{{.Name}}Input {
+    string id = 1;
+}
+{{- end}}
+
+{{- if .Update}}
+message Update{{.Name}}Input {
+    string id = 1;
+}
+{{- end}}
+
+{{- if .Delete}}
+message Delete{{.Name}}Input {
+    string id = 1;
+}
+{{- end}}
+
+
+{{- if .Subscribe}}
+message {{.Name}} {
+    string id = 1;
+}
+
+{{- end}}
+{{- end}}
+
+{{- end}}
 service {{pascal .Name}} {
-    {{- range .Funcs}}
+{{- range .Funcs}}
     rpc {{.Name}} ({{.Name}}Input) returns ({{.Name}}Payload);
-    {{- end}}
-	{{- range .Types}}
+{{- end}}
+{{- range .Models}}
 	{{- if .Query}}
     rpc Get{{.Name}} (Get{{.Name}}Input) returns ({{.Name}});
-    {{- if ne .Plural ""}}
+        {{- if ne .Plural ""}}
     rpc List{{.Name}} (Empty) returns ({{.Plural}});
+        {{- end}}
     {{- end}}
-    {{- end}}
-    {{- if .Mutate}}
+    {{- range .Fields}}
+        {{- if .Create}}
     rpc Create{{.Name}} ({{.Name}}Input) returns ({{.Name}});
+        {{- end}}
+        {{- if .Update}}
     rpc Update{{.Name}} ({{.Name}}Input) returns ({{.Name}});
+        {{- end}}
+        {{- if .Delete}}
     rpc Delete{{.Name}} (Get{{.Name}}Input) returns ({{.Name}});
-    {{- end}}
-    {{- if .Subscribe}}
+        {{- end}}
+        {{- if .Subscribe}}
     rpc Consume{{.Name}} (Empty) returns (stream {{.Name}});
+        {{- end}}
     {{- end}}
-	{{- end}}
+{{- end}}
 }
 
 {{- range .Funcs}}

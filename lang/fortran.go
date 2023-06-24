@@ -8,31 +8,27 @@ import (
 //go:embed template/fortran
 var fortranTpl embed.FS
 
-var fortranTypes = &core.TypeMap{
-	Int:    "integer",
-	Float:  "real",
-	String: "character(len=20)",
-	Bool:   "logical",
+var fortranTypes = TypeMap{
+	core.Int:    "integer",
+	core.Float:  "real",
+	core.String: "character(len=20)",
+	core.ID:     "character(len=20)",
+	core.Bool:   "logical",
 }
 
-var fortranScripts = &core.Scripts{
-	Init: `
-`,
-	Gen: `
-mkcert {{.Name}}.local localhost 127.0.0.1 ::1
-mkdir ./cmd/.secrets
-mv {{.Name}}.local+3.pem {{.Name}}.local+3-key.pem ./cmd/.secrets
-`,
-	Start: `
+var fortranScripts = &Scripts{
+	Map: map[string]string{
+		"start": `
 {{.Name}} serve --port {{.Port}} 
 `,
-	Stop: `
+		"stop": `
 kill $(lsof -t -i:{{.Port}})
 `,
+	},
 }
 
-func Fortran(parent string) *core.Language {
-	return core.CreateLanguage(
+func Fortran(parent string) *Language {
+	return CreateLanguage(
 		"fortran",
 		parent,
 		nil,

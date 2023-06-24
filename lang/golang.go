@@ -48,49 +48,45 @@ var goService = `
 			),
 		)
 `
-var goTypes = &core.TypeMap{
-	Int:    "int64",
-	Float:  "float64",
-	String: "string",
-	Bool:   "bool",
+var goTypes = TypeMap{
+	core.Int:    "int64",
+	core.Float:  "float64",
+	core.String: "string",
+	core.Bool:   "bool",
+	core.ID:     "string",
 }
 
-var goScripts = &core.Scripts{
-	Init: `
+var goScripts = &Scripts{
+	Map: map[string]string{
+		"init": `
 mkcert {{.Name}}.local localhost 127.0.0.1 ::1
 mkdir ./cmd/.secrets
 mv {{.Name}}.local+3.pem {{.Name}}.local+3-key.pem ./cmd/.secrets
-go mod tidy
-`,
-	Gen: `
+go mod tidy`,
+		"gen": `
 go generate ./...
 go fmt ./...
 `,
-	Build: `
+		"build": `
 go build 
 go install
 `,
+	},
 }
 
-var goSysScripts = &core.Scripts{
-	Init: `
-mkcert {{.Name}}.bot localhost 127.0.0.1 ::1
-mkdir cmd/.secrets
-mv {{.Name}}.bot+3.pem {{.Name}}.bot+3-key.pem cmd/.secrets
-go mod tidy
-`,
-	Gen: `
-go generate ./...
-go fmt ./...
-`,
-	Build: `
-go build 
-go install
-`,
+var goSysScripts = &Scripts{
+	Map: map[string]string{
+		"init":    "mkcert {{.Name}}.module.local localhost 127.0.0.1 ::1 && mkdir cmd/.secrets && mv {{.Name}}.module.local+3.pem {{.Name}}.module.local+3-key.pem cmd/.secrets && go mod tidy",
+		"gen":     "go generate ./...",
+		"format":  "go fmt",
+		"build":   "go build",
+		"relay":   "go run main.go relay",
+		"service": "go run main.go service",
+	},
 }
 
-func Go(parent string) *core.Language {
-	l := core.CreateLanguage(
+func Go(parent string) *Language {
+	l := CreateLanguage(
 		"go",
 		parent,
 		goSysScripts,

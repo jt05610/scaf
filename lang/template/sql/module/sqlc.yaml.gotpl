@@ -1,0 +1,8 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "v{{.Version}}/db/query.sql.gotpl"
+    schema: "v{{.Version}}/db/schema.sql.gotpl"
+    gen:
+        package: "{{.Name}}"
+        out: "{{.Name}}/v{{.Version}}"

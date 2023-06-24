@@ -22,12 +22,10 @@ func (b *Builder) VisitSystem(ctx context.Context, s *core.System) error {
 }
 
 func markFieldList(fl []*core.Field) {
-	for i, f := range fl {
-		f.Last = i == len(fl)-1
-	}
+	fl[len(fl)-1].Last = true
 }
 
-func markType(t *core.Type) {
+func markType(t *core.Model) {
 	markFieldList(t.Fields)
 }
 
@@ -37,11 +35,9 @@ func markFunc(f *core.Func) {
 }
 
 func markModule(m *core.Module) {
-	for _, api := range m.API {
-		for _, t := range api.Types {
-			if t.Subscribe {
-				api.HasSubs = true
-			}
+	for _, api := range m.APIs() {
+
+		for _, t := range api.Models {
 			markType(t)
 		}
 		for _, f := range api.Funcs {

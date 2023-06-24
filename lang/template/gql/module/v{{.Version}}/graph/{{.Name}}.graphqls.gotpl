@@ -2,17 +2,7 @@
 # Author: {{.Author}}
 # Date: {{.Date}}
 
-extend schema
-    @link(url: "https://specs.apollo.dev/federation/v2.1",
-       import: ["@key", "@shareable", "@tag", "@external", "@inaccessible", "@composeDirective"])
-
-extend type User @key(fields: "id") {
-    {{- range .Models}}
-{{- if .Query}}
-    {{lower .Plural}}: [{{.Name}}]
-    {{- end}}
-    {{- end}}
-}
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@shareable"])
 
 type Query {
 {{- range .Models}}

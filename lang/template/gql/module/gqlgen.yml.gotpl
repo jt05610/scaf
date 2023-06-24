@@ -1,13 +1,14 @@
 schema:
-  - v1/graph/*.graphql
+  - v1/graph/*.graphqls
 
 exec:
-  filename: v1/graph/generated.go
-  package: graph
+  layout: follow-schema
+  dir: v1/graph/generated
+  package: generated
 
 federation:
-  filename: v1/graph/federation.go
-  package: graph
+  filename: v1/graph/generated
+  package: generated
 
 resolver:
   layout: follow-schema
@@ -15,8 +16,9 @@ resolver:
   package: graph
   filename_template: "{name}.resolvers.go"
 
-autobind:
-  - "{{.Name}}/v1"
+model:
+  filename: graph/model/models_gen.go
+  package: model
 
 models:
   ID:

@@ -2,235 +2,345 @@ package testData
 
 import (
 	"github.com/jt05610/scaf/core"
-	"github.com/jt05610/scaf/lang"
-	"testing"
 )
 
-// Data creates a module for managing data
-func Data(parent string) *core.Module {
-	t := &core.Type{
-		Name:   "Database",
-		Plural: "Databases",
-		Fields: []*core.Field{
-			{Name: "Name", Type: core.String},
-		},
-		Query:     true,
-		Mutate:    true,
-		Subscribe: false,
-	}
-
-	return &core.Module{
-		MetaData: &core.MetaData{
-			Name:        "data",
-			Description: "data is used for managing data",
-			Author:      "Jonathan Taylor",
-			Date:        "20 Jun 2023",
-		},
-		Version: 1,
-		API: map[string]*core.API{
-			"v1": {
-				Name:     "data",
-				Version:  1,
-				Date:     "20 Jun 2023",
-				Author:   "Jonathan Taylor",
-				Language: lang.Go(parent),
-				Types:    []*core.Type{t},
-			},
-		},
-	}
-}
-
-// User creates a module for managing users.
-func User(parent string) *core.Module {
-	t := &core.Type{
+// Users creates a module for managing users
+func Users() *core.Module {
+	model := &core.Model{
 		Name:   "User",
 		Plural: "Users",
+		Query:  true,
 		Fields: []*core.Field{
-			{Name: "Name", Type: core.String},
-			{Name: "Email", Type: core.String},
-			{Name: "Password", Type: core.String},
-		},
-		Query:     true,
-		Mutate:    true,
-		Subscribe: false,
-	}
-	return &core.Module{
-		MetaData: &core.MetaData{
-			Name:        "identity",
-			Description: "users is used for managing users",
-			Author:      "Jonathan Taylor",
-			Date:        "20 Jun 2023",
-		},
-		Version: 1,
-		API: map[string]*core.API{
-			"v1": {
-				Name:     "identity",
-				Version:  1,
-				Date:     "20 Jun 2023",
-				Author:   "Jonathan Taylor",
-				Language: lang.Go(parent),
-				Types:    []*core.Type{t},
+			{
+				Name:     "Name",
+				Type:     core.String,
+				Required: true,
+				Create:   true,
+			},
+			{
+				Name:     "Email",
+				Type:     core.String,
+				Required: true,
+				Create:   true,
 			},
 		},
 	}
-
+	mod := core.NewModule("users", "Jonathan Taylor", "23 Jun 2023")
+	modAPI := core.NewAPI("users", "Jonathan Taylor", "23 Jun 2023", core.Go)
+	modAPI.AddModel(model)
+	mod.AddAPI(modAPI)
+	return mod
 }
 
-// Creator creates a module for that is used for creating modules
-func Creator(parent string) *core.Module {
-	t := &core.Type{
-		Name:   "Type",
-		Plural: "Types",
+// APIs creates a module for managing APIs
+func APIs() *core.Module {
+	user := core.External("User", "User", "Users")
+	model := &core.Model{
+		Name:   "Model",
+		Plural: "Models",
 		Fields: []*core.Field{
-			{Name: "Name", Type: core.String},
-			{Name: "Description", Type: core.String},
-			{Name: "Plural", Type: core.String},
-			{Name: "Query", Type: core.Bool},
-			{Name: "Mutate", Type: core.Bool},
-			{Name: "Subscribe", Type: core.Bool},
+			{
+				Name:     "Name",
+				Type:     core.String,
+				Required: true,
+				Create:   true,
+			},
+			{
+				Name:     "Description",
+				Type:     core.String,
+				Required: true,
+				Create:   true,
+			},
+			{
+				Name:     "Plural",
+				Type:     core.String,
+				Required: true,
+				Create:   true,
+			},
 		},
-		Query:     false,
-		Mutate:    false,
-		Subscribe: false,
 	}
-	field := &core.Type{
+	field := &core.Model{
 		Name:   "Field",
 		Plural: "Fields",
 		Fields: []*core.Field{
-			{Name: "Name", Type: core.String},
-			{Name: "Description", Type: core.String},
-			{Name: "Required", Type: core.Bool},
-			{Name: "Type", Type: t},
-		},
-		Query:     false,
-		Mutate:    false,
-		Subscribe: false,
-	}
-
-	t.Fields = append(t.Fields, &core.Field{Name: "Fields", Type: core.Array(field)})
-
-	f := &core.Type{
-		Name:   "Func",
-		Plural: "Funcs",
-		Fields: []*core.Field{
-			{Name: "Name", Type: core.String},
-			{Name: "Description", Type: core.String},
-			{Name: "Params", Type: core.Array(field)},
-			{Name: "Returns", Type: core.Array(field)},
-		},
-		Query:     false,
-		Mutate:    false,
-		Subscribe: false,
-	}
-	portMap := &core.Type{
-		Name: "PortMap",
-		Fields: []*core.Field{
-			{Name: "UI", Type: core.Int},
-			{Name: "GQL", Type: core.Int},
-			{Name: "RPC", Type: core.Int},
-		},
-		Query:     false,
-		Mutate:    false,
-		Subscribe: false,
-	}
-	metaData := &core.Type{
-		Name: "MetaData",
-		Fields: []*core.Field{
-			{Name: "ID", Type: core.String},
-			{Name: "Rev", Type: core.String},
-			{Name: "Name", Type: core.String},
-			{Name: "Description", Type: core.String},
-			{Name: "Author", Type: core.String},
-			{Name: "Date", Type: core.String},
-			{Name: "PortMap", Type: portMap},
-		},
-		Query:     false,
-		Mutate:    false,
-		Subscribe: false,
-	}
-
-	api := &core.Type{
-		Name:   "API",
-		Plural: "APIs",
-		Fields: []*core.Field{
-			{Name: "Name", Type: core.String},
-			{Name: "PortMap", Type: portMap},
-			{Name: "Author", Type: core.String},
-			{Name: "Version", Type: core.String},
-			{Name: "Language", Type: core.String},
-			{Name: "Date", Type: core.String},
-			{Name: "Types", Type: core.Array(t)},
-			{Name: "Funcs", Type: core.Array(f)},
-		},
-		Query:     false,
-		Mutate:    false,
-		Subscribe: false,
-	}
-	module := &core.Type{
-		Name:   "Module",
-		Plural: "Modules",
-		Fields: []*core.Field{
-			{Name: "MetaData", Type: metaData},
-			{Name: "Version", Type: core.Int},
-			{Name: "APIs", Type: core.Array(api)},
-		},
-		Query:     true,
-		Mutate:    true,
-		Subscribe: false,
-	}
-
-	api.Fields = append(api.Fields, &core.Field{Name: "Deps", Type: core.Array(module)})
-	types := []*core.Type{
-		portMap,
-		metaData,
-		t,
-		field,
-		f,
-		api,
-		module,
-	}
-
-	return &core.Module{
-		MetaData: &core.MetaData{
-			Name:        "creator",
-			Date:        "18 Jun 2023",
-			Description: "scaf is a tool for creating systems",
-			Author:      "Jonathan Taylor",
-		},
-		API: map[string]*core.API{
-			"v1": {
-				Name:     "creator",
-				Version:  1,
-				Date:     "18 Jun 2023",
-				Author:   "Jonathan Taylor",
-				Language: lang.Go(parent),
-				Types:    types,
+			{
+				Name:     "Name",
+				Type:     core.String,
+				Required: true,
+				Create:   true,
+			},
+			{
+				Name:     "Description",
+				Type:     core.String,
+				Required: true,
+				Create:   true,
+			},
+			{
+				Name:     "Type",
+				Type:     core.String,
+				Required: true,
+				Create:   true,
+			},
+			{
+				Name:     "Required",
+				Type:     core.Bool,
+				Required: true,
+				Create:   true,
+			},
+			{
+				Name: "Last",
+				Type: core.Bool,
+			},
+			{
+				Name:   "IsArray",
+				Type:   core.Bool,
+				Update: true,
+				Create: true,
+			},
+			{
+				Name:   "Query",
+				Type:   core.Bool,
+				Create: true,
+			},
+			{
+				Name:   "Create",
+				Type:   core.Bool,
+				Create: true,
+			},
+			{
+				Name:   "Update",
+				Type:   core.Bool,
+				Create: true,
+			},
+			{
+				Name:   "Delete",
+				Type:   core.Bool,
+				Create: true,
+			},
+			{
+				Name:   "Subscribe",
+				Type:   core.Bool,
+				Create: true,
 			},
 		},
 	}
+
+	model.Fields = append(model.Fields, &core.Field{
+		Name:    "Fields",
+		Type:    field,
+		IsArray: true,
+	})
+
+	function := &core.Model{
+		Name:   "Function",
+		Plural: "Functions",
+		Fields: []*core.Field{
+			{
+				Name:     "Name",
+				Type:     core.String,
+				Required: true,
+				Create:   true,
+			},
+			{
+				Name:     "Description",
+				Type:     core.String,
+				Required: true,
+				Create:   true,
+			},
+			{
+				Name:    "Params",
+				Type:    field,
+				IsArray: true,
+				Create:  true,
+			},
+			{
+				Name:    "Returns",
+				Type:    field,
+				IsArray: true,
+				Create:  true,
+			},
+			{
+				Name:   "UserCode",
+				Type:   core.String,
+				Create: true,
+			},
+		},
+	}
+	api := &core.Model{
+		Name:   "API",
+		Plural: "APIs",
+		Query:  true,
+
+		Fields: []*core.Field{
+			{
+				Name:     "Name",
+				Type:     core.String,
+				Required: true,
+				Create:   true,
+			},
+			{
+				Name: "Running",
+				Type: core.Bool,
+			},
+			user,
+			{
+				Name: "Date",
+				Type: core.String,
+			},
+			{
+				Name: "Version",
+				Type: core.String,
+			},
+			{
+				Name:     "Description",
+				Type:     core.String,
+				Required: true,
+				Create:   true,
+			},
+			{
+				Name:    "Functions",
+				Type:    function,
+				IsArray: true,
+			},
+			{
+				Name:    "Models",
+				Type:    model,
+				IsArray: true,
+			},
+			{
+				Name:     "Language",
+				Type:     core.String,
+				Required: true,
+			},
+		},
+	}
+
+	api.Fields = append(api.Fields, &core.Field{
+		Name:    "Dependencies",
+		Type:    api,
+		IsArray: true,
+		Query:   true,
+		Update:  true,
+	})
+
+	ret := core.NewModule("apis", "Jonathan Taylor", "23 Jun 2023")
+	modAPI := core.NewAPI("apis", "Jonathan Taylor", "23 Jun 2023", core.Go)
+	modAPI.AddModel(api)
+
+	genFunc := &core.Func{
+		Name:        "Generate",
+		Description: "Creates a new module and protobuf APIs for any dependencies",
+		Params: []*core.Field{
+			{
+				Name: "module",
+				Type: core.ID,
+			},
+		},
+		Return: []*core.Field{
+			{
+				Name: "message",
+				Type: core.String,
+			},
+			{
+				Name: "url",
+				Type: core.String,
+			},
+		},
+	}
+	startFunc := &core.Func{
+		Name:        "Start",
+		Description: "Starts the module's servers",
+		Params: []*core.Field{
+			{
+				Name: "module",
+				Type: core.ID,
+			},
+		},
+		Return: []*core.Field{
+			{
+				Name: "message",
+				Type: core.String,
+			},
+		},
+	}
+	stopFunc := &core.Func{
+		Name:        "Stop",
+		Description: "Stops the module's servers",
+		Params: []*core.Field{
+			{
+				Name: "module",
+				Type: core.ID,
+			},
+		},
+		Return: []*core.Field{
+			{
+				Name: "message",
+				Type: core.String,
+			},
+		},
+	}
+	for _, _func := range []*core.Func{genFunc, startFunc, stopFunc} {
+		modAPI.AddFunc(_func)
+	}
+	modAPI.Description = "The APIs module is used to create and manage APIs"
+	ret.AddAPI(modAPI)
+	return ret
+}
+
+// Modules creates a module for creating modules
+func Modules() *core.Module {
+	user := core.External("User", "User", "Users")
+	api := core.External("APIs", "API", "APIs")
+	api.IsArray = true
+	api.Update = true
+	api.Delete = true
+	module := &core.Model{
+		Name:   "Module",
+		Plural: "Modules",
+		Query:  true,
+		Fields: []*core.Field{
+			{
+				Name:     "Name",
+				Type:     core.String,
+				Required: true,
+				Create:   true,
+				Query:    true,
+				Update:   true,
+			},
+			{
+				Name:     "Description",
+				Type:     core.String,
+				Create:   true,
+				Required: true,
+				Query:    true,
+				Update:   true,
+			},
+			api,
+			user,
+		},
+	}
+
+	ret := core.NewModule("modules", "Jonathan Taylor", "23 Jun 2023")
+	modAPI := core.NewAPI("modules", "Jonathan Taylor", "23 Jun 2023", core.Go)
+	modAPI.AddModel(module)
+	modAPI.Description = "The module for creating modules"
+	ret.AddAPI(modAPI)
+	return ret
 }
 
 func SCAFSystem(name string) *core.System {
 	s := core.NewSystem(name, "The core system for scaf", "Jonathan Taylor", "18 Jun 2023")
-	err := s.AddModule(Data(name))
+	err := s.AddModule(APIs())
 	if err != nil {
 		panic(err)
 	}
-	err = s.AddModule(User(name))
+	err = s.AddModule(Users())
 	if err != nil {
 		panic(err)
 	}
-	err = s.AddModule(Creator(name))
+	err = s.AddModule(Modules())
 	if err != nil {
 		panic(err)
 	}
 	return s
-}
-
-func RunTest(t *testing.T, parent string, f func(system *core.System) error) {
-	s := SCAFSystem(parent)
-	err := f(s)
-	if err != nil {
-		t.Error(err)
-	}
 }

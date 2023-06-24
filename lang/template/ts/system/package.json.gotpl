@@ -3,12 +3,16 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "build": "pnpm  --parallel --filter \"./**\" build",
-    "serve": "pnpm  --parallel --filter \"./**\" serve",
-    "build:remotes": "pnpm --parallel --filter \"./housework/ui\" build",
-    "serve:remotes": "pnpm --parallel --filter \"./housework/ui\" serve",
-    "dev:hosts": "pnpm --filter \"./appFrame\" dev",
-    "stop": "kill-port --port {{.PortMap.UI}},{{.PortMap.GQL}}{{- range .Modules}},{{.PortMap.UI}}{{end}}"
+    "pretty": "prettier --write .",
+    "init:modules": "pnpm run --parallel -r init",
+    "gen:modules": "pnpm run --parallel -r gen",
+    "format:modules": "pnpm run --parallel -r format",
+    "init": "pnpm run init:modules && pnpm run gen:modules && pnpm run format:modules && pnpm run pretty",
+    "build:modules": "pnpm run --parallel -r build",
+    "relay:modules": "pnpm run --parallel -r relay",
+    "service:modules": "pnpm run --parallel -r service",
+    "dev:ui": "pnpm --filter \"./appFrame\" dev",
+    "stop:modules": "kill-port --port {{.PortMap.UI}},{{.PortMap.GQL}}{{- range .Modules}},{{.PortMap.UI}}{{end}}"
   },
   "devDependencies": {
     "kill-port": "^2.0.1",

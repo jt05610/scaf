@@ -8,11 +8,12 @@ import (
 //go:embed template/python
 var pyTpl embed.FS
 
-var pyTypes = &core.TypeMap{
-	Int:    "int",
-	Float:  "float",
-	String: "str",
-	Bool:   "bool",
+var pyTypes = TypeMap{
+	core.Int:    "int",
+	core.Float:  "float",
+	core.String: "str",
+	core.ID:     "str",
+	core.Bool:   "bool",
 }
 
 var shService = `
@@ -26,17 +27,19 @@ var shService = `
 	}
 `
 
-var pyScripts = &core.Scripts{
-	Init: `
+var pyScripts = &Scripts{
+	Map: map[string]string{
+		"init": `
 sh scripts/init.sh
 `,
-	Gen: `
+		"gen": `
 sh scripts/gen.sh
 `,
+	},
 }
 
-func Python(parent string) *core.Language {
-	l := core.CreateLanguage(
+func Python(parent string) *Language {
+	l := CreateLanguage(
 		"python",
 		parent,
 		nil,

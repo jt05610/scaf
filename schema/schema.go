@@ -23,12 +23,12 @@ type Entry struct {
 
 type schemer struct {
 	Schema Properties `json:"schema"`
-	lang   *core.Language
+	lang   *lang.Language
 	wr     io.Writer
 	seen   map[string]bool
 }
 
-func (s *schemer) typeString(t *core.Type) string {
+func (s *schemer) typeString(t *core.Model) string {
 	v, found := s.lang.TypeMap.Map(core.BaseType(t.Name))
 	if !found {
 		v = "object"
@@ -36,7 +36,7 @@ func (s *schemer) typeString(t *core.Type) string {
 	return v
 }
 
-func (s *schemer) VisitType(ctx context.Context, t *core.Type) *Entry {
+func (s *schemer) VisitType(ctx context.Context, t *core.Model) *Entry {
 	if !t.IsPrimitive() {
 		if _, seen := s.seen[t.Name]; seen {
 			return nil
@@ -53,15 +53,16 @@ func (s *schemer) VisitType(ctx context.Context, t *core.Type) *Entry {
 		for _, f := range t.Fields {
 			entry := s.VisitType(ctx, f.Type)
 			if entry != nil {
-				entry.Title = f.Name
-				entry.Description = f.Description
 				if f.Type.IsArray {
 					arr := &Entry{
 						Type:  "array",
 						Items: entry,
 					}
+					entry.Title = f.Type.Name
 					item.Properties[strings.ToLower(f.Name)] = arr
 				} else {
+					entry.Title = f.Name
+					entry.Description = f.Description
 					item.Properties[strings.ToLower(f.Name)] = entry
 				}
 			}
@@ -72,7 +73,7 @@ func (s *schemer) VisitType(ctx context.Context, t *core.Type) *Entry {
 
 func (s *schemer) VisitModule(ctx context.Context, m *core.Module) error {
 	api := m.API["v1"]
-	for _, t := range api.Types {
+	for _, t := range api.Models {
 		if t.Query {
 			if entry := s.VisitType(ctx, t); entry != nil {
 				entry.Title = t.Name

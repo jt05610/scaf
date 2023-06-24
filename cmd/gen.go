@@ -26,17 +26,18 @@ func Gen(ctx context.Context, parent string, s *core.System) {
 	ctx.Logger.Info("generating system", uz.String("name", s.Name))
 	goLang := lang.Go(parent)
 	gql := lang.GraphQL(parent)
+	sql := lang.SQL(parent)
 	proto := lang.Protobuf(parent)
 	ts := lang.TypeScript(parent)
-
 	bld := builder.NewBuilder(
 		codegen.New(parent, goLang),
-		codegen.New(parent, gql),
 		codegen.New(parent, proto),
+		codegen.New(parent, sql),
+		codegen.New(parent, gql),
 		codegen.New(parent, ts),
-		builder.NewRunner(parent, proto.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
-		builder.NewRunner(parent, goLang.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
-		builder.NewRunner(parent, ts.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
+		//builder.NewRunner(parent, proto.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
+		//builder.NewRunner(parent, goLang.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
+		//builder.NewRunner(parent, ts.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
 	)
 
 	err := bld.VisitSystem(ctx, s)

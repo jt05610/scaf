@@ -2,152 +2,85 @@ package core
 
 type BaseType string
 
+type Type interface {
+	IsPrimitive() bool
+	String() string
+}
+
+func (t BaseType) IsPrimitive() bool {
+	return true
+}
+
+func (t BaseType) String() string {
+	return string(t)
+}
+
 const (
-	IntType    BaseType = "int"
-	FloatType  BaseType = "float"
-	StringType BaseType = "string"
-	BoolType   BaseType = "bool"
+	Int    BaseType = "int"
+	Float  BaseType = "float"
+	String BaseType = "string"
+	ID     BaseType = "ID"
+	Bool   BaseType = "bool"
 )
 
-type Type struct {
+func External(name, kind, pluralKind string) *Field {
+	return &Field{
+		Name: name,
+		Type: &Model{
+			IsExternal: true,
+			Name:       kind,
+			Plural:     pluralKind,
+			Fields: []*Field{
+				{
+					Name:       "ID",
+					Type:       ID,
+					IsExternal: true,
+				},
+			},
+		},
+		IsExternal: true,
+	}
+}
+
+type Model struct {
+	IsExternal  bool
 	Name        string
 	Plural      string
 	Description string
-	Fields      []*Field
-	IsArray     bool
 	Query       bool
-	Mutate      bool
-	Subscribe   bool
-	isPrimitive bool
+	Fields      []*Field
 }
 
-func (t *Type) IsPrimitive() bool {
-	return t.isPrimitive
+func (m *Model) IsPrimitive() bool {
+	return false
 }
 
-var Int = &Type{Name: "int", isPrimitive: true}
-var Float = &Type{Name: "float", isPrimitive: true}
-var String = &Type{Name: "string", isPrimitive: true}
-var Bool = &Type{Name: "bool", isPrimitive: true}
-
-func Array(t *Type) *Type {
-	return &Type{
-		Name:      t.Name,
-		Plural:    t.Plural,
-		Fields:    t.Fields,
-		IsArray:   true,
-		Query:     t.Query,
-		Mutate:    t.Mutate,
-		Subscribe: t.Subscribe,
-	}
+func (m *Model) String() string {
+	return m.Name
 }
 
-func (t *Type) string(l *Language, isInput bool) (ret string) {
-	var found bool
-	if ret, found = l.MapType(BaseType(t.Name)); !found {
-		ret = t.Name
-		if isInput {
-			ret += "Input"
-		}
-	}
-	if t.IsArray {
-		return l.MakeArray(ret)
-	}
-	return ret
-}
-
-func (t *Type) String(l *Language) string {
-	return t.string(l, false)
-}
-
-func (t *Type) InputString(l *Language) string {
-	return t.string(l, true)
-}
-
-var old = `
-
-func makeArray(l Language, s string) string {
-	switch l {
-	case Clojure:
-		return fmt.Sprintf("[]%s", s)
-	case C:
-		return fmt.Sprintf("%s *", s)
-	case Cpp:
-		return fmt.Sprintf("std::vector<%s>", s)
-	case Rust:
-		return fmt.Sprintf("Vec<%s>", s)
-	default:
-		return s
-	}
-}
-
-var TypeMapping = map[Language]map[BaseType]string{
-	C: {
-		IntType:    "int",
-		FloatType:  "float",
-		StringType: "char*",
-		BoolType:   "bool",
-	},
-	Cpp: {
-		IntType:    "int",
-		FloatType:  "float",
-		StringType: "std::string",
-		BoolType:   "bool",
-	},
-	Clojure: {
-		IntType:    "integer",
-		FloatType:  "float",
-		StringType: "string",
-		BoolType:   "boolean",
-	},
-	Rust: {
-		IntType:    "i32",
-		FloatType:  "f32",
-		StringType: "String",
-		BoolType:   "bool",
-	},
-}
-`
-
+// Field represents a field on a model
 type Field struct {
 	Name        string `yaml:"name"`
 	Description string `yaml:"description"`
+	Type        Type   `yaml:"type"`
 	Required    bool   `yaml:"required,omitempty"`
-	Type        *Type  `yaml:"type"`
 	Last        bool   `yaml:"-"`
-}
-
-func (f *Field) IsPrimitive() bool {
-	return f.Type.IsPrimitive()
-
-}
-
-func (f *Field) TypeString(l *Language) string {
-	return f.Type.String(l)
-}
-
-func (f *Field) InputString(l *Language) string {
-	return f.Type.InputString(l)
+	IsArray     bool   `yaml:"IsArray,omitempty"`
+	Query       bool   `yaml:"query,omitempty"`
+	Create      bool   `yaml:"create,omitempty"`
+	Update      bool   `yaml:"update,omitempty"`
+	Delete      bool   `yaml:"delete,omitempty"`
+	Subscribe   bool   `yaml:"subscribe,omitempty"`
+	IsExternal  bool   `yaml:"is_external,omitempty"`
 }
 
 type Func struct {
-	Name        string
-	Description string
-	Return      []*Field
-	Params      []*Field
-}
-
-type API struct {
-	Name     string    `yaml:"name"`
-	PortMap  *PortMap  `yaml:"-"`
-	HasSubs  bool      `yaml:"-"`
-	Author   string    `yaml:"author"`
-	Version  int       `yaml:"version"`
-	Language *Language `yaml:"language"`
-	Date     string    `yaml:"date"`
-	Deps     []*Module `yaml:"deps"`
-	Types    []*Type   `yaml:"types"`
-	Funcs    []*Func   `yaml:"funcs"`
+	Name        string   `yaml:"name"`
+	Description string   `yaml:"description"`
+	UserCode    string   `yaml:"user_code"`
+	Return      []*Field `yaml:"return"`
+	Params      []*Field `yaml:"params"`
 }
 
 type PortMap struct {
@@ -167,14 +100,14 @@ func (p *PortMap) Add(n int) *PortMap {
 type Module struct {
 	*MetaData
 	Version int
-	API     map[string]*API
+	apis    []*API
 }
 
 func (m *Module) Meta() *MetaData {
 	return m.MetaData
 }
 
-func NewModule(name, author, date string, lang *Language) *Module {
+func NewModule(name, author, date string) *Module {
 	return &Module{
 		MetaData: &MetaData{
 			Name:   name,
@@ -186,27 +119,16 @@ func NewModule(name, author, date string, lang *Language) *Module {
 				RPC: RPCPort,
 			},
 		},
-		API: map[string]*API{
-			"v1": {
-				Version:  1,
-				Language: lang,
-				Date:     date,
-				Deps:     make([]*Module, 0),
-				Types:    make([]*Type, 0),
-				Funcs:    make([]*Func, 0),
-			},
-		},
+		apis: make([]*API, 0),
 	}
 }
 
-func (m *Module) AddType(t *Type) {
-	m.API["v1"].Types = append(m.API["v1"].Types, t)
+func (m *Module) APIs() []*API {
+	return m.apis
 }
 
-func (m *Module) AddFunc(f *Func) {
-	m.API["v1"].Funcs = append(m.API["v1"].Funcs, f)
-}
-
-func (m *Module) AddDep(d *Module) {
-	m.API["v1"].Deps = append(m.API["v1"].Deps, d)
+func (m *Module) AddAPI(a *API) {
+	m.apis = append(m.apis, a)
+	m.Version = len(m.apis)
+	a.Version = m.Version
 }

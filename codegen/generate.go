@@ -4,16 +4,18 @@ import (
 	"bytes"
 	"github.com/jt05610/scaf/context"
 	"github.com/jt05610/scaf/core"
+	"github.com/jt05610/scaf/lang"
 	"go.uber.org/zap"
 	"os"
 	"strings"
 )
 
 type Generator struct {
-	loader *core.TemplateLoader
+	loader *lang.TemplateLoader
+	lang   *lang.Language
 }
 
-func (g *Generator) gen(item interface{}, e *core.Entry) error {
+func (g *Generator) gen(item interface{}, e *lang.Entry) error {
 	var pathBuffer bytes.Buffer
 	err := e.Path.Execute(&pathBuffer, item)
 	if err != nil {
@@ -52,10 +54,12 @@ func (g *Generator) gen(item interface{}, e *core.Entry) error {
 
 func (g *Generator) VisitModule(ctx context.Context, m *core.Module) error {
 	ctx.Logger.Debug("Generating", zap.String("module", m.Name))
-	for v, api := range m.API {
-		m.Version = api.Version
+	for _, api := range m.APIs() {
+		if g.lang.Name == "proto" && len(api.Funcs) == 0 {
+			continue
+		}
 		api.PortMap = m.PortMap
-		ctx.Logger.Debug("Generating", zap.String("api", v))
+		ctx.Logger.Debug("Generating", zap.String("api", api.Name), zap.Int("version", api.Version))
 		for _, e := range g.loader.Module() {
 			ctx.Logger.Debug("Generating", zap.String("template", e.Path.Name()))
 			if err := g.gen(api, e); err != nil {
@@ -64,7 +68,7 @@ func (g *Generator) VisitModule(ctx context.Context, m *core.Module) error {
 			}
 			ctx.Logger.Debug("Generated", zap.String("template", e.Path.Name()))
 		}
-		ctx.Logger.Debug("Generated", zap.String("api", v))
+		ctx.Logger.Debug("Generated", zap.String("api", api.Name), zap.Int("version", api.Version))
 		api.PortMap = nil
 	}
 	return nil
@@ -91,7 +95,7 @@ func (g *Generator) VisitSystem(ctx context.Context, s *core.System) error {
 	return nil
 }
 
-func New(parent string, lang *core.Language) *Generator {
-	loader := core.NewLoader(parent, lang)
-	return &Generator{loader: loader}
+func New(parent string, language *lang.Language) *Generator {
+	loader := lang.NewLoader(parent, language)
+	return &Generator{loader: loader, lang: language}
 }

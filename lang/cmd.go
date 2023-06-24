@@ -1,7 +1,8 @@
-package core
+package lang
 
 import (
 	"bytes"
+	"github.com/jt05610/scaf/core"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -9,7 +10,7 @@ import (
 	"text/template"
 )
 
-type Cmd[T Storable] struct {
+type Cmd[T core.Storable] struct {
 	init  []func(m T) *exec.Cmd
 	gen   []func(m T) *exec.Cmd
 	start []func(m T) *exec.Cmd
@@ -37,9 +38,9 @@ func (c *Cmd[T]) Build() []func(m T) *exec.Cmd {
 	return c.build
 }
 
-func ModFuncs(parent, cc string, sub ...string) []func(m *Module) *exec.Cmd {
+func ModFuncs(parent, cc string, sub ...string) []func(m *core.Module) *exec.Cmd {
 	lines := strings.Split(cc, "\n")
-	cmds := make([]func(m *Module) *exec.Cmd, 0)
+	cmds := make([]func(m *core.Module) *exec.Cmd, 0)
 	for _, c := range lines {
 		if c == "" {
 			continue
@@ -47,7 +48,7 @@ func ModFuncs(parent, cc string, sub ...string) []func(m *Module) *exec.Cmd {
 		t := template.Must(template.New(c).Parse(c))
 
 		if len(strings.Split(c, " ")) > 0 {
-			cmds = append(cmds, func(m *Module) *exec.Cmd {
+			cmds = append(cmds, func(m *core.Module) *exec.Cmd {
 				var buf bytes.Buffer
 				err := t.Execute(&buf, m)
 				if err != nil {
@@ -71,9 +72,9 @@ func ModFuncs(parent, cc string, sub ...string) []func(m *Module) *exec.Cmd {
 	return cmds
 }
 
-func SysFuncs(parent, cc string, sub ...string) []func(s *System) *exec.Cmd {
+func SysFuncs(parent, cc string, sub ...string) []func(s *core.System) *exec.Cmd {
 	lines := strings.Split(cc, "\n")
-	cmds := make([]func(s *System) *exec.Cmd, 0)
+	cmds := make([]func(s *core.System) *exec.Cmd, 0)
 	for _, c := range lines {
 		if c == "" {
 			continue
@@ -81,7 +82,7 @@ func SysFuncs(parent, cc string, sub ...string) []func(s *System) *exec.Cmd {
 		t := template.Must(template.New(c).Parse(c))
 
 		if len(strings.Split(c, " ")) > 0 {
-			cmds = append(cmds, func(s *System) *exec.Cmd {
+			cmds = append(cmds, func(s *core.System) *exec.Cmd {
 				var buf bytes.Buffer
 				err := t.Execute(&buf, s)
 				if err != nil {
@@ -107,53 +108,53 @@ func SysFuncs(parent, cc string, sub ...string) []func(s *System) *exec.Cmd {
 }
 
 type CmdSet struct {
-	Mod *Cmd[*Module]
-	Sys *Cmd[*System]
+	Mod *Cmd[*core.Module]
+	Sys *Cmd[*core.System]
 }
 
-func NewSysCmd(parent string, scripts *Scripts) (cmd *Cmd[*System]) {
+func NewSysCmd(parent string, scripts *Scripts) (cmd *Cmd[*core.System]) {
 	if scripts == nil {
 		return nil
 	}
 	if scripts.WorkDir == "" {
-		cmd = &Cmd[*System]{
-			init:  SysFuncs(parent, scripts.Init),
-			gen:   SysFuncs(parent, scripts.Gen),
-			start: SysFuncs(parent, scripts.Start),
-			stop:  SysFuncs(parent, scripts.Stop),
-			build: SysFuncs(parent, scripts.Build),
+		cmd = &Cmd[*core.System]{
+			init:  SysFuncs(parent, scripts.Map["init"]),
+			gen:   SysFuncs(parent, scripts.Map["gen"]),
+			start: SysFuncs(parent, scripts.Map["start"]),
+			stop:  SysFuncs(parent, scripts.Map["stop"]),
+			build: SysFuncs(parent, scripts.Map["build"]),
 		}
 	} else {
-		cmd = &Cmd[*System]{
-			init:  SysFuncs(parent, scripts.Init, scripts.WorkDir),
-			gen:   SysFuncs(parent, scripts.Gen, scripts.WorkDir),
-			start: SysFuncs(parent, scripts.Start, scripts.WorkDir),
-			stop:  SysFuncs(parent, scripts.Stop, scripts.WorkDir),
-			build: SysFuncs(parent, scripts.Build, scripts.WorkDir),
+		cmd = &Cmd[*core.System]{
+			init:  SysFuncs(parent, scripts.Map["init"], scripts.WorkDir),
+			gen:   SysFuncs(parent, scripts.Map["gen"], scripts.WorkDir),
+			start: SysFuncs(parent, scripts.Map["start"], scripts.WorkDir),
+			stop:  SysFuncs(parent, scripts.Map["stop"], scripts.WorkDir),
+			build: SysFuncs(parent, scripts.Map["build"], scripts.WorkDir),
 		}
 	}
 	return
 }
 
-func NewModCmd(parent string, scripts *Scripts) (cmd *Cmd[*Module]) {
+func NewModCmd(parent string, scripts *Scripts) (cmd *Cmd[*core.Module]) {
 	if scripts == nil {
 		return nil
 	}
 	if scripts.WorkDir == "" {
-		cmd = &Cmd[*Module]{
-			init:  ModFuncs(parent, scripts.Init),
-			gen:   ModFuncs(parent, scripts.Gen),
-			start: ModFuncs(parent, scripts.Start),
-			stop:  ModFuncs(parent, scripts.Stop),
-			build: ModFuncs(parent, scripts.Build),
+		cmd = &Cmd[*core.Module]{
+			init:  ModFuncs(parent, scripts.Map["init"]),
+			gen:   ModFuncs(parent, scripts.Map["gen"]),
+			start: ModFuncs(parent, scripts.Map["start"]),
+			stop:  ModFuncs(parent, scripts.Map["stop"]),
+			build: ModFuncs(parent, scripts.Map["build"]),
 		}
 	} else {
-		cmd = &Cmd[*Module]{
-			init:  ModFuncs(parent, scripts.Init, scripts.WorkDir),
-			gen:   ModFuncs(parent, scripts.Gen, scripts.WorkDir),
-			start: ModFuncs(parent, scripts.Start, scripts.WorkDir),
-			stop:  ModFuncs(parent, scripts.Stop, scripts.WorkDir),
-			build: ModFuncs(parent, scripts.Build, scripts.WorkDir),
+		cmd = &Cmd[*core.Module]{
+			init:  ModFuncs(parent, scripts.Map["init"], scripts.WorkDir),
+			gen:   ModFuncs(parent, scripts.Map["gen"], scripts.WorkDir),
+			start: ModFuncs(parent, scripts.Map["start"], scripts.WorkDir),
+			stop:  ModFuncs(parent, scripts.Map["stop"], scripts.WorkDir),
+			build: ModFuncs(parent, scripts.Map["build"], scripts.WorkDir),
 		}
 	}
 	return

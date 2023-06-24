@@ -1,0 +1,25 @@
+{{range .Models}}
+    {{- if .Query}}
+-- name: Get{{pascal .Name}} :one
+SELECT * FROM {{lower .Plural}}
+WHERE id = $1 LIMIT 1;
+-- name: List{{pascal .Name}}s :many
+SELECT * FROM {{lower .Plural}}
+ORDER BY name;
+-- name: Create{{pascal .Name}} :one
+INSERT INTO {{lower .Plural}} (
+    {{range $i, $e := .Fields}}{{- if $e.Create}}{{- if gt $i 0}}, {{end}}
+    {{- fLower $e.Name}}{{end -}}
+{{- end}}
+) VALUES (
+    {{range $i, $e := .Fields}}{{- if $e.Create}}{{- if gt $i 0}}, {{end}}$i{{end -}} {{end }}
+)
+RETURNING *;
+
+-- name: Delete{{pascal .Name}} :exec
+DELETE FROM {{lower .Plural}}
+WHERE id = $1;
+
+    {{- end}}
+
+{{end}}

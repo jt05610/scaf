@@ -8,30 +8,33 @@ import (
 //go:embed template/ts
 var tsTpl embed.FS
 
-var tsTypes = &core.TypeMap{
-	Int:    "number",
-	Float:  "number",
-	String: "string",
-	Bool:   "boolean",
+var tsTypes = TypeMap{
+	core.Int:    "number",
+	core.Float:  "number",
+	core.String: "string",
+	core.ID:     "string",
+	core.Bool:   "boolean",
 }
 
-var tsScripts = &core.Scripts{
+var tsScripts = &Scripts{
 	WorkDir: "ui",
 }
 
-func TypeScript(parent string) *core.Language {
-	tsSysScripts := &core.Scripts{
-		Init: `
+func TypeScript(parent string) *Language {
+	tsSysScripts := &Scripts{
+		Map: map[string]string{
+			"init": `
 `,
-		Gen: `
+			"gen": `
 pnpm install
 npx prettier --write .
 `,
-		Build: `
+			"build": `
 pnpm run build
 `,
+		},
 	}
-	return core.CreateLanguage(
+	return CreateLanguage(
 		"ts",
 		parent,
 		tsSysScripts,

@@ -8,28 +8,19 @@ import (
 //go:embed template/gql
 var gqlTpl embed.FS
 
-var gqlTypes = &core.TypeMap{
-	Int:    "Int",
-	Float:  "Float",
-	String: "String",
-	Bool:   "Boolean",
+var gqlTypes = TypeMap{
+	core.Int:    "Int",
+	core.Float:  "Float",
+	core.String: "String",
+	core.Bool:   "Boolean",
+	core.ID:     "ID!",
 }
 
-var gqlScripts = &core.Scripts{
-	Init: `
-go mod tidy
-`,
-	Gen: `
-go generate ./...
-go fmt ./...
-`,
-}
-
-func GraphQL(parent string) *core.Language {
-	return core.CreateLanguage(
+func GraphQL(parent string) *Language {
+	return CreateLanguage(
 		"gql",
 		parent,
-		gqlScripts,
+		nil,
 		nil,
 		&gqlTpl,
 		gqlTypes,

@@ -6,14 +6,11 @@ package cmd
 
 import (
 	"fmt"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jt05610/scaf/context"
 	"github.com/jt05610/scaf/core"
-	"github.com/jt05610/scaf/tui"
 	"github.com/jt05610/scaf/yaml"
 	"github.com/jt05610/scaf/zap"
 	uz "go.uber.org/zap"
-	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -51,14 +48,6 @@ For example, with scaf, you can:
 - Download and organize your required modules automatically in a local directory, akin to Python's venv or Node's node_modules.
 
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		url := "http://scaf:fold@localhost:5984/test-systems"
-		m := tui.NewTUI(url)
-		p := tea.NewProgram(m)
-		if _, err := p.Run(); err != nil {
-			log.Fatal(err)
-		}
-	},
 }
 
 func Execute() {

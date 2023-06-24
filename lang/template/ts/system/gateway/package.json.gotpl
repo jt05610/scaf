@@ -1,6 +1,7 @@
 {
   "type": "module",
   "scripts": {
+    "gen": "rover supergraph compose --config ../supergraph.yaml > ./supergraph.graphql",
     "serve": "ts-node-esm ./src/index.ts"
   },
   "devDependencies": {

@@ -4,7 +4,7 @@
 
 module mod_{{.Name}}
 
-{{ range .Types}}
+{{ range .Models}}
 type :: {{pascal .Name}}
     {{- range $index, $elem := .Fields}}
     {{typeTrans $elem}} :: {{$elem.Name}}

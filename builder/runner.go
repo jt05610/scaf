@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"github.com/jt05610/scaf/context"
 	"github.com/jt05610/scaf/core"
+	"github.com/jt05610/scaf/lang"
 	"go.uber.org/zap"
 	"os/exec"
 )
 
 type runner struct {
-	cmd     *core.CmdSet
+	cmd     *lang.CmdSet
 	parent  string
 	seen    map[string]bool
 	scripts []ModScript
@@ -111,7 +112,8 @@ func (r *runner) VisitModule(ctx context.Context, m *core.Module) error {
 		return nil
 	}
 	r.seen[m.Name] = true
-	for _, api := range m.API {
+	ctx.Logger.Debug("Running commands", zap.String("module", m.Name))
+	for _, api := range m.APIs() {
 		m.Version = api.Version
 		for _, s := range r.scripts {
 			var err error
@@ -145,7 +147,7 @@ const (
 	ModScriptStop
 )
 
-func NewRunner(parent string, set *core.CmdSet, scripts ...ModScript) core.Visitor {
+func NewRunner(parent string, set *lang.CmdSet, scripts ...ModScript) core.Visitor {
 	return &runner{
 		cmd:     set,
 		parent:  parent,
