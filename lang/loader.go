@@ -178,12 +178,11 @@ func NewYamlCrawler(l *Language, m *core.API) *TypeCrawler {
 	}
 	fm := funcMap(l)
 	ret.tpl = template.Must(template.New("translateFuncs").Funcs(fm).Parse(fmt.Sprintf(`
-{{- if not .IsExternal}}
   {{.Name}}:
     model: %s/v1.{{.Name}}
   Create{{.Name}}Params:
     model: %s/v1.Create{{.Name}}Params
-{{end}}`, m.Name, m.Name)))
+`, m.Name, m.Name)))
 	return ret
 }
 func NewCrawler(l *Language, m *core.API) *TypeCrawler {

@@ -4,7 +4,13 @@
 
 package graph
 
+import "{{.Name}}/v1"
+
 //go:generate go run github.com/99designs/gqlgen generate
 
 type Resolver struct {
+	db     *{{.Name}}.Queries
+	{{- if gt (len .Funcs) 0}}
+	client *{{.Name}}.{{pascal .Name}}Client
+	{{end}}
 }

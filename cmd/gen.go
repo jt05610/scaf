@@ -35,8 +35,9 @@ func gen(ctx context.Context, parent string, s *core.System) error {
 		codegen.New(parent, sql),
 		codegen.New(parent, gql),
 		codegen.New(parent, ts),
-		builder.NewRunner(parent, sql.CmdSet, builder.ModScriptGen),
-		builder.NewRunner(parent, goLang.CmdSet, builder.ModScriptGen),
+		builder.NewRunner(parent, core.SQL, sql.CmdSet, builder.ModScriptGen),
+		builder.NewRunner(parent, core.Protobuf, proto.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
+		builder.NewRunner(parent, core.Go, goLang.CmdSet, builder.ModScriptGen),
 		//builder.NewRunner(parent, ts.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
 	)
 

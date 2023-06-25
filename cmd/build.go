@@ -22,8 +22,8 @@ func Build(ctx context.Context, parent string, s *core.System) {
 	ts := lang.TypeScript(parent)
 
 	bld := builder.NewBuilder(
-		builder.NewRunner(parent, goLang.CmdSet, builder.ModScriptBuild),
-		builder.NewRunner(parent, ts.CmdSet, builder.ModScriptBuild),
+		builder.NewRunner(parent, core.Go, goLang.CmdSet, builder.ModScriptBuild),
+		builder.NewRunner(parent, core.TypeScript, ts.CmdSet, builder.ModScriptBuild),
 	)
 
 	err := bld.VisitSystem(ctx, s)

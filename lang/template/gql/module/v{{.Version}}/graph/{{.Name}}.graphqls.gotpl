@@ -22,7 +22,7 @@ input {{.Name}}Params {
 	{{- end}}
 }
 
-type {{.Name}}Payload {
+type {{.Name}}Result {
 	{{- range .Return}}
 	{{.Name}}: {{typeTrans .}}
 	{{- end}}
@@ -72,7 +72,7 @@ type Mutation {
     {{- end}}
 {{- end}}
 {{- range .Funcs}}
-    {{.Name}}(input: {{.Name}}Params): {{.Name}}Payload
+    {{.Name}}(input: {{.Name}}Params): {{.Name}}Result
 {{- end}}
 }
 

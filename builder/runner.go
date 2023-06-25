@@ -14,6 +14,7 @@ import (
 type runner struct {
 	cmd     *lang.CmdSet
 	parent  string
+	lang    core.Lang
 	seen    map[string]bool
 	mu      sync.Mutex
 	scripts []ModScript
@@ -123,6 +124,9 @@ func (r *runner) VisitModule(ctx context.Context, m *core.Module) error {
 	r.mu.Unlock()
 	ctx.Logger.Debug("Running commands", zap.String("module", m.Name))
 	for _, api := range m.APIs() {
+		if len(api.Funcs) == 0 && r.lang == core.Protobuf {
+			continue
+		}
 		m.Version = api.Version
 		for _, s := range r.scripts {
 			var err error
@@ -156,10 +160,11 @@ const (
 	ModScriptStop
 )
 
-func NewRunner(parent string, set *lang.CmdSet, scripts ...ModScript) core.Visitor {
+func NewRunner(parent string, language core.Lang, set *lang.CmdSet, scripts ...ModScript) core.Visitor {
 	return &runner{
 		cmd:     set,
 		parent:  parent,
+		lang:    language,
 		seen:    make(map[string]bool),
 		scripts: scripts,
 	}

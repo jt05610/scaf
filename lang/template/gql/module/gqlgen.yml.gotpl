@@ -1,6 +1,7 @@
+{{$version := .Version -}}
+{{$pkg := .Name -}}
 schema:
   - v1/graph/*.graphqls
-
 exec:
   layout: follow-schema
   dir: v1/graph/generated
@@ -16,6 +17,10 @@ resolver:
   package: graph
   filename_template: "{name}.resolvers.go"
 
+model:
+  filename: v1/graph/generated/models_gen.go
+  package: generated
+
 models:
   ID:
     model:
@@ -26,4 +31,13 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
+
 {{gqlYaml .}}
+{{- range .Funcs}}
+  {{.Name}}Params:
+    model:
+      - {{$pkg}}/v{{$version}}.{{.Name}}Params
+  {{.Name}}Result:
+    model:
+      - {{$pkg}}/v{{$version}}.{{.Name}}Result
+{{- end}}

@@ -9,113 +9,15 @@ package {{.Name}};
 option go_package = "{{.Name}}/v1/{{.Name}}";
 
 message Empty {}
-{{ range .Models}}
-message {{.Name}} {
-    {{- if .Query }}
-    string id = 1;
-    {{- range $index, $elem := .Fields}}
-    {{typeTrans $elem}} {{$elem.Name}} = {{add $index 2}};
-    {{- end}}
-    {{- else}}
-    {{- range $index, $elem := .Fields}}
-    {{typeTrans $elem}} {{$elem.Name}} = {{add $index 1}};
-    {{- end}}
-    {{- end}}
-}
 
-{{- if .Query}}
-message Get{{.Name}}Input {
-    string id = 1;
-}
-{{- end}}
-
-message {{.Name}}Input {
-{{- if .Query}}
-    string id = 1;
-    {{- range $index, $elem := .Fields}}
-    {{inputTrans $elem}} {{$elem.Name}} = {{add $index 2}};
-    {{- end}}
-    {{- else}}
-    {{- range $index, $elem := .Fields}}
-    {{inputTrans $elem}} {{$elem.Name}} = {{add $index 1}};
-    {{- end}}
-{{- end}}
-
-}
-
-{{- if ne .Plural ""}}
-message {{.Plural}} {
-	repeated {{.Name}} {{lower .Plural}} = 1;
-}
-{{- end}}
-
-
-{{- range .Fields}}
-
-{{- if .Query}}
-message Get{{.Name}}Input {
-    string id = 1;
-}
-{{- end}}
-
-{{- if .Create}}
-message Create{{.Name}}Input {
-    string id = 1;
-}
-{{- end}}
-
-{{- if .Update}}
-message Update{{.Name}}Input {
-    string id = 1;
-}
-{{- end}}
-
-{{- if .Delete}}
-message Delete{{.Name}}Input {
-    string id = 1;
-}
-{{- end}}
-
-
-{{- if .Subscribe}}
-message {{.Name}} {
-    string id = 1;
-}
-
-{{- end}}
-{{- end}}
-
-{{- end}}
 service {{pascal .Name}} {
 {{- range .Funcs}}
-    rpc {{.Name}} ({{.Name}}Input) returns ({{.Name}}Payload);
-{{- end}}
-{{- range .Models}}
-	{{- if .Query}}
-    rpc Get{{.Name}} (Get{{.Name}}Input) returns ({{.Name}});
-        {{- if ne .Plural ""}}
-    rpc List{{.Name}} (Empty) returns ({{.Plural}});
-        {{- end}}
-    {{- end}}
-    {{- range .Fields}}
-        {{- if .Create}}
-    rpc Create{{.Name}} ({{.Name}}Input) returns ({{.Name}});
-        {{- end}}
-        {{- if .Update}}
-    rpc Update{{.Name}} ({{.Name}}Input) returns ({{.Name}});
-        {{- end}}
-        {{- if .Delete}}
-    rpc Delete{{.Name}} (Get{{.Name}}Input) returns ({{.Name}});
-        {{- end}}
-        {{- if .Subscribe}}
-    rpc Consume{{.Name}} (Empty) returns (stream {{.Name}});
-        {{- end}}
-    {{- end}}
+    rpc {{.Name}} ({{.Name}}Params) returns ({{.Name}}Result);
 {{- end}}
 }
 
 {{- range .Funcs}}
-message {{.Name}}Input {
+message {{.Name}}Params {
 	{{- if .Params}}
     {{- range $index, $elem := .Params}}
     {{inputTrans $elem}} {{$elem.Name}} = {{add $index 1}};
@@ -123,7 +25,7 @@ message {{.Name}}Input {
 	{{- end}}
 }
 
-message {{.Name}}Payload {
+message {{.Name}}Result {
 	{{- if .Return}}
     {{- range $index, $elem := .Return}}
     {{typeTrans $elem}} {{$elem.Name}} = {{add $index 1}};

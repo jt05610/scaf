@@ -3,8 +3,11 @@ package core
 type Lang string
 
 const (
-	Go     Lang = "go"
-	Python Lang = "py"
+	Go         Lang = "go"
+	TypeScript Lang = "ts"
+	Python     Lang = "py"
+	Protobuf   Lang = "proto"
+	SQL        Lang = "sql"
 )
 
 type Dependency struct {
