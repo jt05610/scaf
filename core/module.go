@@ -48,6 +48,9 @@ type Model struct {
 	Plural      string
 	Description string
 	Query       bool
+	Create      bool
+	Update      bool
+	Delete      bool
 	Fields      []*Field
 }
 

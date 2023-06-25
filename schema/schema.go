@@ -29,7 +29,7 @@ type schemer struct {
 }
 
 func (s *schemer) typeString(t *core.Model) string {
-	v, found := s.lang.TypeMap.Map(core.BaseType(t.Name))
+	v, found := s.lang.TypeMap[core.BaseType(t.Name)]
 	if !found {
 		v = "object"
 	}
@@ -51,18 +51,24 @@ func (s *schemer) VisitType(ctx context.Context, t *core.Model) *Entry {
 	if !t.IsPrimitive() {
 		item.Properties = make(Properties)
 		for _, f := range t.Fields {
-			entry := s.VisitType(ctx, f.Type)
+			m, ok := f.Type.(*core.Model)
+			if !ok {
+				continue
+			}
+			entry := s.VisitType(ctx, m)
 			if entry != nil {
-				if f.Type.IsArray {
+				m := f.Type.(*core.Model)
+				if f.IsArray {
 					arr := &Entry{
 						Type:  "array",
 						Items: entry,
 					}
-					entry.Title = f.Type.Name
+					entry.Title = m.Name
+					entry.Description = m.Description
 					item.Properties[strings.ToLower(f.Name)] = arr
 				} else {
-					entry.Title = f.Name
-					entry.Description = f.Description
+					entry.Title = m.Name
+					entry.Description = m.Description
 					item.Properties[strings.ToLower(f.Name)] = entry
 				}
 			}
@@ -72,7 +78,7 @@ func (s *schemer) VisitType(ctx context.Context, t *core.Model) *Entry {
 }
 
 func (s *schemer) VisitModule(ctx context.Context, m *core.Module) error {
-	api := m.API["v1"]
+	api := m.APIs()[m.Version-1]
 	for _, t := range api.Models {
 		if t.Query {
 			if entry := s.VisitType(ctx, t); entry != nil {

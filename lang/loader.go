@@ -17,10 +17,11 @@ import (
 
 // TypeCrawler visits all types and generates functions to translate inputs into the correct type
 type TypeCrawler struct {
-	seen  map[*core.Model]string
-	l     *Language
-	Types []*core.Model
-	tpl   *template.Template
+	seen   map[string]string
+	parent *core.Model
+	l      *Language
+	Types  []*core.Model
+	tpl    *template.Template
 }
 
 // VisitType visits a type and generates functions to translate inputs into the correct type
@@ -29,7 +30,7 @@ func (c *TypeCrawler) VisitType(t core.Type) error {
 		return nil
 	}
 	m := t.(*core.Model)
-	if _, seen := c.seen[m]; seen {
+	if _, seen := c.seen[m.Name]; seen {
 		return nil
 	}
 
@@ -39,10 +40,18 @@ func (c *TypeCrawler) VisitType(t core.Type) error {
 		return err
 	}
 
-	c.seen[m] = buf.String()
+	c.seen[m.Name] = buf.String()
 	for _, f := range m.Fields {
-		if err := c.VisitType(f.Type); err != nil {
-			return err
+		if !f.Type.IsPrimitive() {
+			c.parent = m
+			mod := f.Type.(*core.Model)
+			mod.Create = f.Create
+			mod.Update = f.Update
+			mod.Delete = f.Delete
+			mod.Query = f.Query
+			if err := c.VisitType(mod); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -65,10 +74,127 @@ func (c *TypeCrawler) String() string {
 	return buf.String()
 }
 
+func NewSQLQueryCrawler(l *Language, m *core.API) *TypeCrawler {
+	ret := &TypeCrawler{
+		seen:  make(map[string]string),
+		Types: m.Models,
+		l:     l,
+	}
+	fm := funcMap(l)
+	fm["sqlParent"] = func(m *core.Model) string {
+		if ret.parent == nil {
+			return ""
+		}
+		return fmt.Sprintf(", %s_id", strings.ToLower(ret.parent.Name))
+	}
+	fm["sqlParentQuery"] = func(m *core.Model) string {
+		if ret.parent == nil {
+			return ""
+		}
+		return fmt.Sprintf(`-- name: %sBy%s :many
+ SELECT * from %s
+WHERE %s_id = $1 
+ORDER BY id;`, m.Name, ret.parent.Name, strings.ToLower(m.Plural), strings.ToLower(ret.parent.Name))
+	}
+
+	ret.tpl = template.Must(template.New("translateFuncs").Funcs(fm).Parse(fmt.Sprintf(`
+{{- $model := .}}
+{{- if not .IsExternal}}
+-- name: {{pascal .Name}} :one
+SELECT * FROM {{lower .Plural}}
+WHERE id = $1 LIMIT 1;
+
+-- name: {{pascal .Name}}s :many
+SELECT * FROM {{lower .Plural}}
+ORDER BY name;
+{{sqlParentQuery .}}
+    {{- if .Create}}
+-- name: Create{{pascal .Name}} :one
+INSERT INTO {{lower .Plural}} (
+    {{range $i, $e := .Fields}}{{if .Type.IsPrimitive}}{{- if gt $i 0}}, {{end}}"{{fLower $e.Name}}"{{end}}
+{{- end}}
+{{- sqlParent .}}
+) VALUES ({{ $j := 1}}
+    {{range $i, $e := .Fields}}{{if .Type.IsPrimitive}}{{- if gt $j 1}}, {{end}}${{$j}}{{$j = (add $j 1) -}}{{end -}}{{end}}
+{{- if sqlParent .}}, ${{$j}}{{end}}
+)
+RETURNING *;
+	{{- end}}
+    {{- if .Delete}}
+-- name: Delete{{pascal .Name}} :exec
+DELETE FROM {{lower .Plural}}
+WHERE id = $1;
+
+    {{- end}}
+	{{- if .Update}}
+{{ $updFields := 0 }}
+{{ range .Fields}}
+    {{- if .Update}}
+        {{- $updFields = (add $updFields 1) -}}
+    {{- end}}
+{{ end}}
+{{ if gt $updFields 0}}
+    -- name: Update{{pascal .Name}} :one
+    UPDATE {{lower .Plural}} {{- $j := 0 -}}
+        {{range $i, $e := .Fields}}{{- if not .IsArray}}{{- if $e.Update}}{{- if gt $j 0}}, {{end}}
+        {{if eq $j 0}}set {{end}}"{{fLower $e.Name}}" = ${{add $j 2}}{{$j = (add $j 1)}}{{end -}}{{end}}{{end}}
+    WHERE id = $1
+    RETURNING *;
+    {{- end}}
+    {{- end}}
+{{- end}}
+`)))
+	return ret
+}
+func NewEntityCrawler(l *Language, m *core.API) *TypeCrawler {
+	ret := &TypeCrawler{
+		seen:  make(map[string]string),
+		Types: m.Models,
+		l:     l,
+	}
+	fm := funcMap(l)
+	fm["makeEntity"] = func(m *core.Model) string {
+		if m.IsExternal {
+			return fmt.Sprintf(`
+type %s struct {
+	ID int64 %s
+}
+func (%s) IsEntity() {}`, m.Name, "`"+`json:"id"`+"`", m.Name)
+		}
+		return fmt.Sprintf(`
+func (%s) IsEntity() {}`, m.Name)
+	}
+	ret.tpl = template.Must(template.New("translateFuncs").Funcs(fm).Parse(fmt.Sprintf(`
+	{{makeEntity .}}
+`)))
+	return ret
+}
+
+func NewYamlCrawler(l *Language, m *core.API) *TypeCrawler {
+	ret := &TypeCrawler{
+		seen:  make(map[string]string),
+		Types: m.Models,
+		l:     l,
+	}
+	fm := funcMap(l)
+	ret.tpl = template.Must(template.New("translateFuncs").Funcs(fm).Parse(fmt.Sprintf(`
+{{- if not .IsExternal}}
+  {{.Name}}:
+    model: %s/v1.{{.Name}}
+  Create{{.Name}}Params:
+    model: %s/v1.Create{{.Name}}Params
+{{end}}`, m.Name, m.Name)))
+	return ret
+}
 func NewCrawler(l *Language, m *core.API) *TypeCrawler {
-	tpl := template.New("translateFuncs").Funcs(funcMap(l))
+	ret := &TypeCrawler{
+		seen:  make(map[string]string),
+		Types: m.Models,
+		l:     l,
+	}
+	ret.tpl = template.New("translateFuncs").Funcs(funcMap(l))
 	if l.Name == "go" {
-		tpl = template.Must(tpl.Parse(fmt.Sprintf(`
+		ret.tpl = template.Must(ret.tpl.Parse(fmt.Sprintf(`
 func New{{.Name}}(input *%s.{{.Name}}Input) *%s.{{.Name}} {
 	ret := &%s.{{.Name}}{
 	{{- range .Fields}}
@@ -95,7 +221,7 @@ func New{{.Name}}(input *%s.{{.Name}}Input) *%s.{{.Name}} {
 }
 `, m.Name, m.Name, m.Name, m.Name)))
 	} else if l.Name == "gql" {
-		tpl = template.Must(tpl.Parse(fmt.Sprintf(`
+		ret.tpl = template.Must(ret.tpl.Parse(fmt.Sprintf(`
 {{- if .IsExternal}}
 extend type {{.Name}} @key(fields: "id") {
     id: ID! @external
@@ -108,53 +234,65 @@ type {{.Name}} {{if .Query}}@key(fields: "id"){{end}}{
     {{lower .Name}}: {{typeTrans .}}
     {{- end}}
 }
-
-input {{.Name}}Input {
+{{if .Create}}
+input Create{{.Name}}Params {
     {{- range .Fields}}
         {{- if not .IsExternal}}
             {{- if .Create}}
-    {{lower .Name}}: {{inputTrans .}}{{if.Required}}!{{end }}
+    {{lower .Name}}: {{createTrans .}}{{if.Required}}!{{end }}
             {{- end}}
         {{- else}}
 	{{lower .Name}}: ID
         {{- end}}
     {{- end}}
 }
+{{end}}
+
+{{if .Update}}
+input Update{{.Name}}Params {
+    {{- range .Fields}}
+        {{- if not .IsExternal}}
+            {{- if .Create}}
+    {{lower .Name}}: {{updateTrans .}}{{if.Required}}!{{end }}
+            {{- end}}
+        {{- else}}
+	{{lower .Name}}: ID
+        {{- end}}
+    {{- end}}
+}
+{{end}}
 {{- end}}
 `)))
 	} else if l.Name == "sql" {
-		tpl = template.Must(tpl.Parse(fmt.Sprintf(`
+		fm := funcMap(l)
+		fm["sqlParent"] = func(m *core.Model) string {
+			if !m.Query {
+				return fmt.Sprintf("%s_id bigint references %s(id),", strings.ToLower(ret.parent.Name), strings.ToLower(ret.parent.Plural))
+			}
+			return ""
+		}
+		ret.tpl = template.New("translateFuncs").Funcs(fm)
+		ret.tpl = template.Must(ret.tpl.Parse(fmt.Sprintf(`
 {{- $model := .}}
 {{- if not .IsExternal}}
 create table {{lower .Plural}} (
-	id bigserial primary key,
+	id bigint primary key,
+	{{sqlParent . -}}
 	{{- range $i, $e := .Fields}}
 		{{- if not .IsArray -}}
 	{{if gt $i 0}}, {{end}}
-	"{{fLower .Name}}" {{typeTrans .}}
-		{{- else}}
+			{{- if not .IsExternal}}
+	"{{fLower .Name}}" {{typeTrans .}}{{if.Required}} not null{{end }}
+			{{- else}}
+	"{{fLower .Name}}_id" bigint 
+			{{- end}}
 		{{- end}}
 	{{- end}}
 );
-
-	{{- range .Fields}}
-		{{- if .IsArray}}
-create table {{lower .Name}} (
-	id bigserial primary key,
-	"{{lower .Name}}_id" bigint 
-	constraint fk_{{lower $model.Name}} foreign key({{lower .Name}}_id) references {{lower $model.Plural}}(id)
-);
-		{{- end}}
-	{{- end}}
 {{- end}}
 `)))
 	}
-	return &TypeCrawler{
-		seen:  make(map[*core.Model]string),
-		Types: m.Models,
-		l:     l,
-		tpl:   tpl,
-	}
+	return ret
 }
 
 func funcMap(l *Language) template.FuncMap {
@@ -167,6 +305,12 @@ func funcMap(l *Language) template.FuncMap {
 		},
 		"inputTrans": func(f core.Field) string {
 			return l.InputDecl(f)
+		},
+		"updateTrans": func(f core.Field) string {
+			return l.UpdateDecl(f)
+		},
+		"createTrans": func(f core.Field) string {
+			return l.CreateDecl(f)
 		},
 		"pluralize": pluralize.NewClient().Plural,
 		"lower":     cases.Lower(language.Und).String,
@@ -182,8 +326,29 @@ func funcMap(l *Language) template.FuncMap {
 			}
 			return c.String()
 		},
+		"gqlYaml": func(m *core.API) string {
+			c := NewYamlCrawler(l, m)
+			if err := c.Crawl(); err != nil {
+				panic(err)
+			}
+			return c.String()
+		},
+		"entities": func(m *core.API) string {
+			c := NewEntityCrawler(l, m)
+			if err := c.Crawl(); err != nil {
+				panic(err)
+			}
+			return c.String()
+		},
 		"translateMod": func(m *core.Module) string {
 			c := NewCrawler(l, m.APIs()[m.Version-1])
+			if err := c.Crawl(); err != nil {
+				panic(err)
+			}
+			return c.String()
+		},
+		"sqlQueries": func(m *core.API) string {
+			c := NewSQLQueryCrawler(l, m)
 			if err := c.Crawl(); err != nil {
 				panic(err)
 			}

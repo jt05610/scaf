@@ -17,7 +17,7 @@ func TestSchemer_VisitModule(t *testing.T) {
 	}
 	v := NewSchemer(df)
 	ctx := context.NewContext(nil)
-	mod := testData.Creator("core")
+	mod := testData.APIs()
 	if err := v.VisitModule(ctx, mod); err != nil {
 		t.Fatal(err)
 	}

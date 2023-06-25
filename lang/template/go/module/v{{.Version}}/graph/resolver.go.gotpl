@@ -2,11 +2,9 @@
 // Author: {{.Author}}
 // Date: {{.Date}}
 
+package graph
 
-package main
+//go:generate go run github.com/99designs/gqlgen generate
 
-import "{{.Name}}/cmd"
-
-func main() {
-	cmd.Execute()
+type Resolver struct {
 }

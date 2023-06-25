@@ -8,24 +8,31 @@ import (
 	"github.com/jt05610/scaf/lang"
 	"go.uber.org/zap"
 	"os/exec"
+	"sync"
 )
 
 type runner struct {
 	cmd     *lang.CmdSet
 	parent  string
 	seen    map[string]bool
+	mu      sync.Mutex
 	scripts []ModScript
 }
 
 func (r *runner) VisitSystem(ctx context.Context, s *core.System) error {
 	ctx.Logger.Debug("Running commands", zap.String("system", s.Name))
 	r.seen = make(map[string]bool)
-
+	var wg sync.WaitGroup
 	for _, m := range s.Modules {
-		if err := r.VisitModule(ctx, m); err != nil {
-			return err
-		}
+		wg.Add(1)
+		go func(m *core.Module) {
+			defer wg.Done()
+			if err := r.VisitModule(ctx, m); err != nil {
+				panic(err)
+			}
+		}(m)
 	}
+	wg.Wait()
 	if r.cmd.Sys != nil {
 		for _, script := range r.scripts {
 			switch script {
@@ -108,10 +115,12 @@ func SysRun(ctx context.Context, s *core.System, cfs []func(m *core.System) *exe
 }
 
 func (r *runner) VisitModule(ctx context.Context, m *core.Module) error {
+	r.mu.Lock()
 	if _, seen := r.seen[m.Name]; seen {
 		return nil
 	}
 	r.seen[m.Name] = true
+	r.mu.Unlock()
 	ctx.Logger.Debug("Running commands", zap.String("module", m.Name))
 	for _, api := range m.APIs() {
 		m.Version = api.Version

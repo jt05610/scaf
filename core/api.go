@@ -3,24 +3,26 @@ package core
 type Lang string
 
 const (
-	GQL      Lang = "gql"
-	TS       Lang = "ts"
-	Protobuf Lang = "proto"
-	Go       Lang = "go"
-	Python   Lang = "py"
+	Go     Lang = "go"
+	Python Lang = "py"
 )
 
+type Dependency struct {
+	Name    string `yaml:"name"`
+	Version string `yaml:"version"`
+}
+
 type API struct {
-	Name        string   `yaml:"name"`
-	Description string   `yaml:"description"`
-	PortMap     *PortMap `yaml:"-"`
-	Author      string   `yaml:"author"`
-	Version     int      `yaml:"version"`
-	Language    Lang     `yaml:"language"`
-	Date        string   `yaml:"date"`
-	Deps        []*API   `yaml:"deps"`
-	Models      []*Model `yaml:"types"`
-	Funcs       []*Func  `yaml:"funcs"`
+	Name        string        `yaml:"name"`
+	Description string        `yaml:"description"`
+	PortMap     *PortMap      `yaml:"-"`
+	Author      string        `yaml:"author"`
+	Version     int           `yaml:"version"`
+	Language    Lang          `yaml:"language"`
+	Date        string        `yaml:"date"`
+	Deps        []*Dependency `yaml:"deps"`
+	Models      []*Model      `yaml:"types"`
+	Funcs       []*Func       `yaml:"funcs"`
 }
 
 func (a *API) HasSubs() bool {
@@ -40,7 +42,7 @@ func NewAPI(name, author, date string, lang Lang) *API {
 		Author:   author,
 		Language: lang,
 		Date:     date,
-		Deps:     make([]*API, 0),
+		Deps:     make([]*Dependency, 0),
 		Models:   make([]*Model, 0),
 		Funcs:    make([]*Func, 0),
 	}
@@ -54,6 +56,6 @@ func (a *API) AddFunc(f *Func) {
 	a.Funcs = append(a.Funcs, f)
 }
 
-func (a *API) AddDep(d *API) {
+func (a *API) AddDep(d *Dependency) {
 	a.Deps = append(a.Deps, d)
 }

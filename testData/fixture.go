@@ -10,6 +10,9 @@ func Users() *core.Module {
 		Name:   "User",
 		Plural: "Users",
 		Query:  true,
+		Create: true,
+		Update: true,
+		Delete: true,
 		Fields: []*core.Field{
 			{
 				Name:     "Name",
@@ -35,6 +38,26 @@ func Users() *core.Module {
 // APIs creates a module for managing APIs
 func APIs() *core.Module {
 	user := core.External("User", "User", "Users")
+
+	dep := &core.Model{
+		Name:   "Dependency",
+		Plural: "Dependencies",
+		Fields: []*core.Field{
+			{
+				Name:     "Name",
+				Type:     core.String,
+				Required: true,
+				Create:   true,
+			},
+			{
+				Name:     "Version",
+				Type:     core.String,
+				Required: true,
+				Create:   true,
+				Update:   true,
+			},
+		},
+	}
 	model := &core.Model{
 		Name:   "Model",
 		Plural: "Models",
@@ -88,10 +111,6 @@ func APIs() *core.Module {
 				Create:   true,
 			},
 			{
-				Name: "Last",
-				Type: core.Bool,
-			},
-			{
 				Name:   "IsArray",
 				Type:   core.Bool,
 				Update: true,
@@ -101,26 +120,31 @@ func APIs() *core.Module {
 				Name:   "Query",
 				Type:   core.Bool,
 				Create: true,
+				Query:  true,
 			},
 			{
 				Name:   "Create",
 				Type:   core.Bool,
 				Create: true,
+				Query:  true,
 			},
 			{
 				Name:   "Update",
 				Type:   core.Bool,
 				Create: true,
+				Query:  true,
 			},
 			{
 				Name:   "Delete",
 				Type:   core.Bool,
 				Create: true,
+				Query:  true,
 			},
 			{
 				Name:   "Subscribe",
 				Type:   core.Bool,
 				Create: true,
+				Query:  true,
 			},
 		},
 	}
@@ -146,6 +170,7 @@ func APIs() *core.Module {
 				Type:     core.String,
 				Required: true,
 				Create:   true,
+				Update:   true,
 			},
 			{
 				Name:    "Params",
@@ -163,14 +188,15 @@ func APIs() *core.Module {
 				Name:   "UserCode",
 				Type:   core.String,
 				Create: true,
+				Update: true,
 			},
 		},
 	}
 	api := &core.Model{
-		Name:   "API",
-		Plural: "APIs",
+		Name:   "Api",
+		Plural: "Apis",
 		Query:  true,
-
+		Create: true,
 		Fields: []*core.Field{
 			{
 				Name:     "Name",
@@ -196,32 +222,35 @@ func APIs() *core.Module {
 				Type:     core.String,
 				Required: true,
 				Create:   true,
+				Update:   true,
 			},
 			{
 				Name:    "Functions",
 				Type:    function,
 				IsArray: true,
+				Create:  true,
 			},
 			{
 				Name:    "Models",
 				Type:    model,
 				IsArray: true,
+				Create:  true,
 			},
 			{
 				Name:     "Language",
 				Type:     core.String,
 				Required: true,
+				Create:   true,
+			},
+			{
+				Name:     "Dependencies",
+				Type:     dep,
+				IsArray:  true,
+				Required: true,
+				Create:   true,
 			},
 		},
 	}
-
-	api.Fields = append(api.Fields, &core.Field{
-		Name:    "Dependencies",
-		Type:    api,
-		IsArray: true,
-		Query:   true,
-		Update:  true,
-	})
 
 	ret := core.NewModule("apis", "Jonathan Taylor", "23 Jun 2023")
 	modAPI := core.NewAPI("apis", "Jonathan Taylor", "23 Jun 2023", core.Go)

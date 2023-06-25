@@ -5,15 +5,6 @@ type Checker struct {
 	k    int
 }
 
-func (c *Checker) VisitAPI(a *API) error {
-	for _, d := range a.Deps {
-		if err := c.VisitAPI(d); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (c *Checker) VisitModule(m *Module) error {
 	if _, seen := c.seen[m.Name]; seen {
 		return nil

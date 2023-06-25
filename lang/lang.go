@@ -40,7 +40,7 @@ func (l *Language) InputString(t core.Type) (s string) {
 	if t.IsPrimitive() {
 		s = l.TypeMap[core.BaseType(t.String())]
 	} else {
-		s = t.String() + "Input"
+		s = t.String() + "Params"
 	}
 	return s
 }
@@ -65,6 +65,28 @@ func (l *Language) InputDecl(f core.Field) (s string) {
 	return s
 }
 
+func (l *Language) CreateDecl(f core.Field) (s string) {
+	s = l.InputString(f.Type)
+	if !f.Type.IsPrimitive() {
+		s = "Create" + s
+	}
+	if f.IsArray {
+		s = l.MakeArray(s)
+	}
+
+	return s
+}
+func (l *Language) UpdateDecl(f core.Field) (s string) {
+	s = l.InputString(f.Type)
+	if !f.Type.IsPrimitive() {
+		s = "Update" + s
+	}
+	if f.IsArray {
+		s = l.MakeArray(s)
+	}
+
+	return s
+}
 func CreateLanguage(name, parent string, sysScripts, modScripts *Scripts, fs *embed.FS, types TypeMap, arrayFmt string) *Language {
 	return &Language{
 		Name:     name,

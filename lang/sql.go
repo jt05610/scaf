@@ -21,7 +21,11 @@ func SQL(parent string) *Language {
 		"sql",
 		parent,
 		nil,
-		nil,
+		&Scripts{
+			Map: map[string]string{
+				"gen": "sqlc generate",
+			},
+		},
 		&sqlTpl,
 		sqlTypes,
 		"%s[]",

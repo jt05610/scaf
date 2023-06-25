@@ -19,7 +19,7 @@ import (
 
 var sysConfig string
 
-func Gen(ctx context.Context, parent string, s *core.System) {
+func gen(ctx context.Context, parent string, s *core.System) error {
 	if sysConfig == "" {
 		sysConfig = parent + "/system.yaml"
 	}
@@ -35,17 +35,18 @@ func Gen(ctx context.Context, parent string, s *core.System) {
 		codegen.New(parent, sql),
 		codegen.New(parent, gql),
 		codegen.New(parent, ts),
-		//builder.NewRunner(parent, proto.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
-		//builder.NewRunner(parent, goLang.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
+		builder.NewRunner(parent, sql.CmdSet, builder.ModScriptGen),
+		builder.NewRunner(parent, goLang.CmdSet, builder.ModScriptGen),
 		//builder.NewRunner(parent, ts.CmdSet, builder.ModScriptInit, builder.ModScriptGen),
 	)
 
 	err := bld.VisitSystem(ctx, s)
 	if err != nil {
 		ctx.Logger.Error("failed to generate system", uz.Error(err))
+		return err
 	}
 	ctx.Logger.Info("system generated", uz.String("name", s.Name))
-
+	return nil
 }
 
 // genCmd represents the gen command
@@ -70,7 +71,10 @@ var genCmd = &cobra.Command{
 			ctx.Logger.Error("error loading system config", uz.Error(err))
 			return
 		}
-		Gen(ctx, parDir, sys)
+		err = gen(ctx, parDir, sys)
+		if err != nil {
+			panic(err)
+		}
 	},
 }
 

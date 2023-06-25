@@ -56,7 +56,7 @@ var buildCmd = &cobra.Command{
 			ctx.Logger.Error("error loading system config", uz.Error(err))
 			return
 		}
-		Gen(ctx, parDir, sys)
+		gen(ctx, parDir, sys)
 	},
 }
 

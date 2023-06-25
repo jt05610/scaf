@@ -16,7 +16,7 @@ type Query {
 
 {{- range .Funcs}}
 
-input {{.Name}}Input {
+input {{.Name}}Params {
 	{{- range .Params}}
 	{{.Name}}: {{inputTrans .}}
 	{{- end}}
@@ -32,24 +32,30 @@ type {{.Name}}Payload {
 type Mutation {
 {{- range .Models}}
     {{- $tName := .Name}}
-    create{{.Name}}(input: {{.Name}}Input): {{.Name}}
-    update{{.Name}}(id: ID!, input: {{.Name}}Input): {{.Name}}
+    {{- if .Create}}
+    create{{.Name}}(input: Create{{.Name}}Params): {{.Name}}
+    {{- end}}
+    {{- if .Update}}
+    update{{.Name}}(id: ID!, input: Update{{.Name}}Params): {{.Name}}
+    {{- end}}
+    {{- if .Delete}}
     delete{{.Name}}(id: ID!): {{.Name}}
+    {{- end}}
     {{- range .Fields}}
         {{- if not .IsExternal}}
             {{- if .Update}}
                 {{- if .IsArray}}
-    add{{.Name}}(id: ID!, input: {{inputTrans .}}): {{typeTrans .}}
+    add{{.Name}}(id: ID!, input: {{updateTrans .}}): {{typeTrans .}}
                 {{- else}}
-    update{{.Name}}(id: ID!, input: {{inputTrans .}}): {{typeTrans .}}
+    update{{.Name}}(id: ID!, input: {{updateTrans .}}): {{typeTrans .}}
                 {{- end}}
             {{- end}}
             {{- if .Delete}}
                 {{- if .Update}}
                     {{- if .IsArray}}
-    add{{.Name}}(id: ID!, input: {{inputTrans .}}): {{typeTrans .}}
+    add{{.Name}}(id: ID!, input: {{updateTrans .}}): {{typeTrans .}}
                     {{- else}}
-    update{{.Name}}(id: ID!, input: {{inputTrans .}}): {{typeTrans .}}
+    update{{.Name}}(id: ID!, input: {{updateTrans .}}): {{typeTrans .}}
                     {{- end}}
                 {{- end}}
             {{- end}}
@@ -66,7 +72,7 @@ type Mutation {
     {{- end}}
 {{- end}}
 {{- range .Funcs}}
-    {{.Name}}(input: {{.Name}}Input): {{.Name}}Payload
+    {{.Name}}(input: {{.Name}}Params): {{.Name}}Payload
 {{- end}}
 }
 

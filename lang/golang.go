@@ -64,6 +64,7 @@ mkdir ./cmd/.secrets
 mv {{.Name}}.local+3.pem {{.Name}}.local+3-key.pem ./cmd/.secrets
 go mod tidy`,
 		"gen": `
+go mod tidy
 go generate ./...
 go fmt ./...
 `,
